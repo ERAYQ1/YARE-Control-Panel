@@ -59,7 +59,7 @@ export function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#09090b] text-[#f4f4f5] font-sans selection:bg-[#27272a] selection:text-[#fafafa]">
+    <div className="flex min-h-screen bg-app-theme text-primary-theme font-sans transition-colors selection:bg-surface-theme selection:text-primary-theme">
       {/* Navigation Sidebar */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} hostname="yare-node-ubuntu-24" />
 

@@ -45,28 +45,28 @@ export function Sidebar({ activeTab, setActiveTab, hostname = 'yare-server' }: S
   ];
 
   return (
-    <aside className="w-60 flex-shrink-0 bg-[#09090b] border-r border-[#27272a] p-3 flex flex-col justify-between h-screen sticky top-0 z-30 font-mono">
+    <aside className="w-60 flex-shrink-0 bg-sidebar-theme border-r border-theme p-3 flex flex-col justify-between h-screen sticky top-0 z-30 font-mono transition-colors">
       <div>
         {/* Brand Header */}
-        <div className="flex items-center gap-2.5 px-2 py-2 mb-4 border-b border-[#27272a]">
-          <div className="h-7 w-7 rounded bg-[#fafafa] flex items-center justify-center font-black text-xs text-[#09090b]">
+        <div className="flex items-center gap-2.5 px-2 py-2 mb-4 border-b border-theme">
+          <div className="h-7 w-7 rounded bg-primary-theme flex items-center justify-center font-black text-xs text-app-theme">
             Y
           </div>
           <div>
-            <h1 className="font-bold text-sm text-[#fafafa] tracking-tight">
-              YARE <span className="text-[10px] font-medium text-[#a1a1aa]">v1.0</span>
+            <h1 className="font-bold text-sm text-primary-theme tracking-tight">
+              YARE <span className="text-[10px] font-medium text-secondary-theme">v1.0</span>
             </h1>
-            <p className="text-[10px] text-[#71717a] font-medium">Server Management</p>
+            <p className="text-[10px] text-muted-theme font-medium">Server Management</p>
           </div>
         </div>
 
         {/* Server Quick Node Status */}
-        <div className="mx-1 mb-3 rounded-lg bg-[#121215] border border-[#27272a] px-3 py-2 flex items-center justify-between text-xs">
+        <div className="mx-1 mb-3 rounded-lg bg-surface-theme border border-theme px-3 py-2 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2 truncate">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            <span className="font-medium text-[#f4f4f5] text-[11px] truncate">{hostname}</span>
+            <span className="font-medium text-primary-theme text-[11px] truncate">{hostname}</span>
           </div>
-          <span className="text-[10px] text-[#71717a]">:8080</span>
+          <span className="text-[10px] text-muted-theme">:8080</span>
         </div>
 
         {/* Navigation Items */}
@@ -80,11 +80,11 @@ export function Sidebar({ activeTab, setActiveTab, hostname = 'yare-server' }: S
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   isActive
-                    ? 'bg-[#27272a] text-[#fafafa]'
-                    : 'text-[#a1a1aa] hover:text-[#f4f4f5] hover:bg-[#18181b]'
+                    ? 'bg-card-theme text-primary-theme font-bold border border-theme'
+                    : 'text-secondary-theme hover:text-primary-theme bg-hover-theme'
                 }`}
               >
-                <Icon className={`h-4 w-4 ${isActive ? 'text-[#fafafa]' : 'text-[#71717a]'}`} />
+                <Icon className={`h-4 w-4 ${isActive ? 'text-primary-theme' : 'text-muted-theme'}`} />
                 <span className="truncate">{item.label}</span>
               </button>
             );
@@ -93,11 +93,11 @@ export function Sidebar({ activeTab, setActiveTab, hostname = 'yare-server' }: S
       </div>
 
       {/* Footer info */}
-      <div className="px-2 py-2 border-t border-[#27272a] text-[11px] text-[#71717a] flex items-center justify-between">
+      <div className="px-2 py-2 border-t border-theme text-[11px] text-muted-theme flex items-center justify-between">
         <span className="flex items-center gap-1">
-          <Shield className="h-3 w-3 text-[#a1a1aa]" /> MIT License
+          <Shield className="h-3 w-3 text-secondary-theme" /> MIT License
         </span>
-        <span className="text-[#a1a1aa]">v1.0.0</span>
+        <span className="text-secondary-theme">v1.0.0</span>
       </div>
     </aside>
   );
