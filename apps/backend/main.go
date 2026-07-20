@@ -1,7 +1,11 @@
 package main
 
 import (
+	"embed"
+	"io/fs"
 	"log"
+	"net/http"
+	"os"
 	"time"
 
 	v1 "yare-backend/internal/api/v1"
@@ -12,6 +16,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+//go:embed dist/*
+var embeddedFrontend embed.FS
+
 func main() {
 	cfg := config.LoadConfig()
 
@@ -19,7 +26,10 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	log.Printf("Starting YARE Panel Backend Server [Env: %s, Port: %s]...", cfg.Environment, cfg.Port)
+	log.Printf("Starting YARE Panel Engine [Env: %s, Port: %s]...", cfg.Environment, cfg.Port)
+
+	// Ensure database directory exists
+	_ = os.MkdirAll("/opt/yare", 0755)
 
 	// Initialize SQLite Database
 	database.InitDB(cfg.DBPath)
@@ -43,12 +53,28 @@ func main() {
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "online",
-			"name":    "YARE Control Panel Backend",
+			"name":    "YARE Control Panel Engine",
 			"version": "1.0.0",
 		})
 	})
 
-	log.Printf("YARE Panel API Server listening on http://0.0.0.0:%s", cfg.Port)
+	// Serve Frontend SPA (Static Embed / Fallback)
+	frontendFS, err := fs.Sub(embeddedFrontend, "dist")
+	if err == nil {
+		r.NoRoute(func(c *gin.Context) {
+			path := c.Request.URL.Path
+			// If file exists in embedded FS, serve it, otherwise serve index.html
+			f, err := frontendFS.Open(path[1:])
+			if err == nil {
+				_ = f.Close()
+				http.FileServer(http.FS(frontendFS)).ServeHTTP(c.Writer, c.Request)
+				return
+			}
+			c.FileFromFS("", http.FS(frontendFS))
+		})
+	}
+
+	log.Printf("YARE Panel listening on http://0.0.0.0:%s", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}

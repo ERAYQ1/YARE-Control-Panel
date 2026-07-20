@@ -13,37 +13,33 @@
 
 ---
 
-## ✨ Implemented Core Highlights & Features
+## ✨ Production Linux Installation & Architecture Audit
 
-- ⚡ **High Performance & Low Footprint**: Go (Gin) backend with SQLite embedded database. Idle memory usage is under 30MB.
+- 🚀 **Single Self-Contained Binary**: The React SPA is compiled & embedded directly into the Go executable via `embed.FS`. Production Linux nodes need **zero Node.js or npm dependencies**—just one standalone binary!
+- 🛡️ **Automated Linux Security & Firewall**: `install.sh` generates a 64-character random JWT secret (`/etc/yare/jwt.secret`), sets 600 file permissions, opens UFW/firewalld port `8080`, and registers a systemd restart daemon (`yare.service`).
+- ⚡ **High Performance & Low Memory**: Go (Gin) backend with embedded SQLite database (`yare.db`). Idle memory footprint is under 30MB.
 - 🎨 **Vercel / Supabase Craft Aesthetics**: Obsidian black palette (`#09090b`), sharp 1px borders, zero AI gradient clutter, and technical monospace typography.
 - 📦 **1-Click App Catalog & Reverse Proxy**: Deploy 1-click Docker stacks (PostgreSQL, Redis, Ollama AI, n8n, Nextcloud) & manage Nginx/Caddy proxy domains with Let's Encrypt SSL.
 - 🏛️ **Multi-Node Swarm Cluster**: Manage multiple remote cloud VPS instances (Hetzner, AWS, HomeLab) from a single control plane over mTLS.
 - 🤖 **AI Copilot & Self-Healing Playbooks**: Natural language server diagnostics & automated remediation triggers (e.g. disk auto-prune, brute-force IP ban).
 - 🌍 **3-Language Support (i18n)**: Seamless dynamic switching between **Türkçe 🇹🇷**, **English 🇬🇧**, and **Deutsch 🇩🇪**.
 - ⌨️ **Global Command Palette (`⌘K`)**: Instant search overlay to navigate anywhere across pages, services, commands, and docker stacks.
-- 🛡️ **Enterprise Security (OWASP)**: Rate limiting (120 req/min), OWASP security headers (`CSP`, `HSTS`, `X-Frame-Options`), JWT token refresh rotation, and RBAC rules.
-- 📊 **Realtime Telemetry Dashboard**: Live CPU, Memory, Disk, and Network bandwidth charts over WebSockets.
-- 💻 **Web Terminal**: Multi-tab PTY terminal interface with interactive shell streaming.
-- 📁 **File Manager**: Tree/Grid file browser, drag-and-drop uploads, built-in code editor modal, and permissions (`chmod`) editor.
-- 🐳 **Docker Engine**: Containers, Images, Volumes, Networks, and Docker Compose stack management.
-- ⚙️ **Systemd Services Manager**: Start, stop, restart, enable, disable, and view `journalctl` service logs.
-- 🔌 **Modular Plugin System**: Extensible plugin lifecycle handlers (`Install`, `Enable`, `Disable`, `Remove`).
 
 ---
 
-## 🖥️ Supported Operating Systems
+## 🖥️ Supported Operating Systems & Architectures
 
 - **Ubuntu** 24+
 - **Debian** 13+
 - **Fedora**
 - **Rocky Linux**
 - **AlmaLinux**
-- *(Upcoming: Arch Linux, OpenSUSE)*
+- **Arch Linux**
+- **Architectures**: `x86_64` (amd64), `aarch64` (arm64), `armv7l`
 
 ---
 
-## ⚡ One-Command Installation
+## ⚡ One-Command Production Linux Installation
 
 Install YARE Panel on your Linux server with a single command:
 

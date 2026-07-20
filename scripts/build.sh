@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# YARE Panel Monorepo Build Script
-# Builds frontend SPA and embeds/compiles binary with Go
+# YARE Panel Production Monorepo Build Pipeline
+# Bundles React SPA into Go single self-contained binary
 # ==============================================================================
 
 set -eo pipefail
 
-echo "==> Building Frontend SPA..."
+echo "==> [1/3] Building React Frontend SPA..."
 cd apps/frontend
 npm run build
 
-echo "==> Copying Frontend dist to Go embed location..."
+echo "==> [2/3] Embedding Frontend Assets into Go Backend..."
 mkdir -p ../backend/dist
 cp -r dist/* ../backend/dist/
 
-echo "==> Building Go Production Binary..."
+echo "==> [3/3] Compiling Go Production Binary..."
 cd ../backend
 go build -ldflags="-s -w" -o bin/yare-backend main.go
 
-echo "==> Build complete! Binary available at apps/backend/bin/yare-backend"
+echo "==> Build Successful! Production binary available at apps/backend/bin/yare-backend"
