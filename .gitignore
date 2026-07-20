@@ -1,0 +1,38 @@
+# Node & Dependencies
+node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build Outputs
+dist/
+build/
+bin/
+*.exe
+*.exe?
+*.dll
+*.so
+*.dylib
+
+# Go
+apps/backend/yare-backend
+apps/backend/yare-backend.exe
+apps/backend/*.db
+apps/backend/*.db-journal
+
+# Environment & Configs
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDEs & System Files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*.log

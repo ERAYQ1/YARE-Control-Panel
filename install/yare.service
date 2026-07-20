@@ -1,0 +1,16 @@
+[Unit]
+Description=YARE Control Panel Server Daemon
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/yare
+ExecStart=/opt/yare/yare-backend
+Restart=always
+RestartSec=5s
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
