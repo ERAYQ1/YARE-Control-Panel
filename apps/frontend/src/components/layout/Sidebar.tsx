@@ -13,7 +13,9 @@ import {
   Puzzle,
   Settings,
   Shield,
-  Server
+  Package,
+  Layers,
+  Bot
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -30,6 +32,9 @@ export function Sidebar({ activeTab, setActiveTab, hostname = 'yare-server' }: S
     { id: 'system', label: t('system'), icon: Cpu },
     { id: 'filemanager', label: t('filemanager'), icon: FolderKanban },
     { id: 'terminal', label: t('terminal'), icon: Terminal },
+    { id: 'appstore', label: 'App Catalog & Proxy', icon: Package },
+    { id: 'cluster', label: 'Multi-Node Cluster', icon: Layers },
+    { id: 'copilot', label: 'AI Copilot & Self-Healing', icon: Bot },
     { id: 'services', label: t('services'), icon: Activity },
     { id: 'docker', label: t('docker'), icon: Box },
     { id: 'network', label: t('network'), icon: Network },
@@ -40,15 +45,15 @@ export function Sidebar({ activeTab, setActiveTab, hostname = 'yare-server' }: S
   ];
 
   return (
-    <aside className="w-60 flex-shrink-0 bg-[#09090b] border-r border-[#27272a] p-3 flex flex-col justify-between h-screen sticky top-0 z-30">
+    <aside className="w-60 flex-shrink-0 bg-[#09090b] border-r border-[#27272a] p-3 flex flex-col justify-between h-screen sticky top-0 z-30 font-mono">
       <div>
         {/* Brand Header */}
         <div className="flex items-center gap-2.5 px-2 py-2 mb-4 border-b border-[#27272a]">
-          <div className="h-7 w-7 rounded bg-[#fafafa] flex items-center justify-center font-black text-xs text-[#09090b] font-mono">
+          <div className="h-7 w-7 rounded bg-[#fafafa] flex items-center justify-center font-black text-xs text-[#09090b]">
             Y
           </div>
           <div>
-            <h1 className="font-bold text-sm text-[#fafafa] font-mono tracking-tight">
+            <h1 className="font-bold text-sm text-[#fafafa] tracking-tight">
               YARE <span className="text-[10px] font-medium text-[#a1a1aa]">v1.0</span>
             </h1>
             <p className="text-[10px] text-[#71717a] font-medium">Server Management</p>
@@ -59,9 +64,9 @@ export function Sidebar({ activeTab, setActiveTab, hostname = 'yare-server' }: S
         <div className="mx-1 mb-3 rounded-lg bg-[#121215] border border-[#27272a] px-3 py-2 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2 truncate">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            <span className="font-medium text-[#f4f4f5] text-[11px] truncate font-mono">{hostname}</span>
+            <span className="font-medium text-[#f4f4f5] text-[11px] truncate">{hostname}</span>
           </div>
-          <span className="text-[10px] text-[#71717a] font-mono">:8080</span>
+          <span className="text-[10px] text-[#71717a]">:8080</span>
         </div>
 
         {/* Navigation Items */}
@@ -80,7 +85,7 @@ export function Sidebar({ activeTab, setActiveTab, hostname = 'yare-server' }: S
                 }`}
               >
                 <Icon className={`h-4 w-4 ${isActive ? 'text-[#fafafa]' : 'text-[#71717a]'}`} />
-                <span>{item.label}</span>
+                <span className="truncate">{item.label}</span>
               </button>
             );
           })}
@@ -88,7 +93,7 @@ export function Sidebar({ activeTab, setActiveTab, hostname = 'yare-server' }: S
       </div>
 
       {/* Footer info */}
-      <div className="px-2 py-2 border-t border-[#27272a] text-[11px] text-[#71717a] flex items-center justify-between font-mono">
+      <div className="px-2 py-2 border-t border-[#27272a] text-[11px] text-[#71717a] flex items-center justify-between">
         <span className="flex items-center gap-1">
           <Shield className="h-3 w-3 text-[#a1a1aa]" /> MIT License
         </span>

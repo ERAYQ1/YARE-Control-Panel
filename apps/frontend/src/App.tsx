@@ -8,6 +8,9 @@ import { Dashboard } from './views/Dashboard';
 import { System } from './views/System';
 import { FileManager } from './views/FileManager';
 import { WebTerminal } from './views/WebTerminal';
+import { AppStore } from './views/AppStore';
+import { Cluster } from './views/Cluster';
+import { AICopilot } from './views/AICopilot';
 import { Services } from './views/Services';
 import { Docker } from './views/Docker';
 import { Network } from './views/Network';
@@ -56,7 +59,7 @@ export function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950">
+    <div className="flex min-h-screen bg-[#09090b] text-[#f4f4f5] font-sans selection:bg-[#27272a] selection:text-[#fafafa]">
       {/* Navigation Sidebar */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} hostname="yare-node-ubuntu-24" />
 
@@ -70,11 +73,14 @@ export function App() {
           userRole={currentUser.role}
         />
 
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-5 overflow-y-auto">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'system' && <System />}
           {activeTab === 'filemanager' && <FileManager />}
           {activeTab === 'terminal' && <WebTerminal />}
+          {activeTab === 'appstore' && <AppStore />}
+          {activeTab === 'cluster' && <Cluster />}
+          {activeTab === 'copilot' && <AICopilot />}
           {activeTab === 'services' && <Services />}
           {activeTab === 'docker' && <Docker />}
           {activeTab === 'network' && <Network />}
