@@ -10,57 +10,57 @@
 
 ---
 
-## ⚡ Hızlı Başlangıç (3 Kolay Kurulum Yöntemi)
+## ⚡ Hızlı Başlangıç (Tek Komutla Kolay Kurulum)
 
-Aşağıdaki 3 yöntemden size en uygun olanını seçerek YARE Control Panel'i anında çalıştırabilirsiniz:
+Aşağıdaki yöntemlerden size en uygun olanını seçerek YARE Control Panel'i **tek komutla** anında çalıştırabilirsiniz:
 
-### 1️⃣ Linux Sunucu Otomatik Kurulumu (Önerilen Canlı Ortam)
+### 🐳 1️⃣ Docker Compose (En Kolay & Önerilen Yöntem)
 
-Herhangi bir **Ubuntu, Debian, Fedora, Arch veya AlmaLinux** sunucusunda tek komutla kurulum yapın:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/ERAYQ1/YARE-Control-Panel/main/install/install.sh | bash
-```
-
-> **Ne yapar?** Gerekli bağımlılıkları yükler, güvenlik için 64-karakterlik JWT anahtarı oluşturur, firewall portunu (`8080`) açar ve otomatik başlayan bir `systemd` servisi (`yare.service`) oluşturur.
-
----
-
-### 2️⃣ Docker Compose ile Konteyner Kurulumu
-
-Sisteminizde Docker yüklü ise tek komutla konteyner içinde başlatın:
+Ne Node.js, ne Go, ne de bağımlılık kurulumu gerektirir. Sisteminizde Docker varsa **tek komutla** başlatın:
 
 ```bash
 docker compose up -d
 ```
 
-Durdurmak için:
-```bash
-docker compose down
-```
+> **Erişim**: `http://localhost:8080` (Durdurmak için: `docker compose down`)
 
 ---
 
-### 3️⃣ Yerel Geliştirme Ortamı (Windows, macOS, Linux)
+### 🐧 2️⃣ Linux Sunucu Otomatik Kurulumu (Root veya Kullanıcı Modu)
 
-Geliştirici ortamında Frontend ve Backend'i **tek komutla** çalıştırmak için:
+Herhangi bir **Ubuntu, Debian, Fedora, Arch veya AlmaLinux** sunucusunda tek komutla kurulum yapın. Root yetkisi yoksa kullanıcı ev dizinine (`~/.yare`) otomatik kurulur, sistemde Go yoksa otomatik indirilir:
 
-#### 🪟 Windows (En Kolay Yöntem):
-Proje dizininde `start.bat` dosyasına **çift tıklayın** veya terminalden çalıştırın:
+```bash
+curl -fsSL https://raw.githubusercontent.com/ERAYQ1/YARE-Control-Panel/main/install/install.sh | bash
+```
+
+> **Ne yapar?** Pre-compiled release binary'sini veya yerel otomatik derlemeyi kullanarak servisi hazırlar. Root modunda `systemd` servisi (`yare.service`) ve firewall portunu (`8080`) otomatik konfigüre eder.
+
+---
+
+### 🚀 3️⃣ Sıfır Bağımlılık - Taşınabilir Executable (.exe / Binary)
+
+1. [GitHub Releases](https://github.com/ERAYQ1/YARE-Control-Panel/releases) sayfasından `yare-panel-windows-amd64.exe` veya `yare-panel-linux-amd64` indirin.
+2. İndirdiğiniz dosyaya çift tıklayın (veya `./yare-panel-windows-amd64.exe` çalıştırın).
+3. Paneline **`http://localhost:8080`** adresinden anında erişin!
+
+---
+
+### 🛠️ 4️⃣ Yerel Geliştirici Ortamı (Kaynak Koddan)
+
+Geliştirici ortamında kaynak koddan çalıştırmak veya katkıda bulunmak için:
+
+#### 🪟 Windows:
+Proje dizininde `start.bat` veya `build-win.bat` çalıştırın:
 ```cmd
 .\start.bat
 ```
 
-#### 🐧 Linux / 🍎 macOS / 🪟 Terminal:
+#### 🐧 Linux / 🍎 macOS:
 ```bash
-# 1. Tüm bağımlılıkları tek seferde kurun
-npm run setup
-
-# 2. Frontend ve Backend'i eşzamanlı olarak tek komutla başlatın
-npm run dev
+make setup
+make dev
 ```
-
-> 💡 `npm run dev` komutu frontend (`http://localhost:5173`) ve backend (`http://localhost:8080`) servislerini aynı terminal penceresinde renkli loglar ile çalıştırır.
 
 ---
 
@@ -81,6 +81,8 @@ Kurulum tamamlandıktan sonra taraıcıdan paneline erişin:
 | `npm run setup` | Tüm monorepo bağımlılıklarını kurar (`root` ve `apps/frontend`) |
 | `npm run dev` | Frontend ve Backend servislerini eşzamanlı çalıştırır |
 | `npm run build` | Frontend'i derler, statik dosyaları Go backend'e gömer ve Linux binary üretir |
+| `npm run build:win` | Windows için tek tıkla bağımsız `yare-panel.exe` derler |
+| `.\build-win.bat` | *(Windows)* Çift tıklama ile bağımsız `yare-panel.exe` üretir |
 | `npm run docker:up` | Docker Compose ile konteyneri arka planda başlatır |
 | `npm run docker:down` | Docker Compose konteynerini durdurur |
 | `make dev` | *(Alternatif)* Makefile ile geliştirici modunu başlatır |

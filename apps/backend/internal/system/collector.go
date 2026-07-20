@@ -180,7 +180,7 @@ func CollectMetrics() *SystemMetrics {
 			drives = append(drives, MountedDrive{
 				Device:       p.Device,
 				MountPoint:   p.Mountpoint,
-				FSType:       p.FSType,
+				FSType:       p.Fstype,
 				Total:        usage.Total,
 				Used:         usage.Used,
 				Free:         usage.Free,

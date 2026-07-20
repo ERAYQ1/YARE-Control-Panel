@@ -1,0 +1,67 @@
+name: YARE Panel Build & Release CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-binaries:
+    name: Build Cross-Platform Standalone Binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Go 1.22
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install Frontend Dependencies & Build SPA
+        run: |
+          npm run setup
+          npm run build:frontend
+          node scripts/copy-dist.js
+
+      - name: Build Standalone Cross-Platform Binaries
+        run: |
+          mkdir -p release-dist
+          cd apps/backend
+          
+          # Linux amd64
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o ../../release-dist/yare-panel-linux-amd64 main.go
+          
+          # Linux arm64
+          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o ../../release-dist/yare-panel-linux-arm64 main.go
+
+          # Windows amd64 (.exe)
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o ../../release-dist/yare-panel-windows-amd64.exe main.go
+
+          # macOS amd64 (Intel)
+          GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o ../../release-dist/yare-panel-darwin-amd64 main.go
+
+          # macOS arm64 (Apple Silicon)
+          GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o ../../release-dist/yare-panel-darwin-arm64 main.go
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: yare-panel-binaries
+          path: release-dist/*
+
+      - name: Create GitHub Release (On Tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

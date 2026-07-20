@@ -16,6 +16,7 @@ cp -r dist/* ../backend/dist/
 
 echo "==> [3/3] Compiling Go Production Binary..."
 cd ../backend
+go mod tidy
 go build -ldflags="-s -w" -o bin/yare-backend main.go
 
 echo "==> Build Successful! Production binary available at apps/backend/bin/yare-backend"

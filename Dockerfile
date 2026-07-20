@@ -28,7 +28,7 @@ COPY apps/backend ./
 COPY --from=frontend-builder /app/apps/frontend/dist ./dist
 
 # Compile standalone static binary
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /opt/yare-backend main.go
+RUN go mod tidy && CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /opt/yare-backend main.go
 
 # --- Stage 3: Lightweight Production Image ---
 FROM alpine:3.19 AS runner
