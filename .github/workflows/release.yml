@@ -8,6 +8,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-binaries:
     name: Build Cross-Platform Standalone Binaries
@@ -31,6 +34,15 @@ jobs:
           npm run setup
           npm run build:frontend
           node scripts/copy-dist.js
+
+      - name: Ensure Dist & Go Modules Tidy
+        run: |
+          mkdir -p apps/backend/dist
+          if [ ! -f "apps/backend/dist/index.html" ]; then
+            echo "<html><body>YARE Control Panel</body></html>" > apps/backend/dist/index.html
+          fi
+          cd apps/backend
+          go mod tidy
 
       - name: Build Standalone Cross-Platform Binaries
         run: |
