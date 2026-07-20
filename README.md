@@ -7,56 +7,56 @@
 [![CI/CD Pipeline](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF.svg)](https://github.com/ERAYQ1/YARE-Control-Panel/actions)
 [![i18n](https://img.shields.io/badge/i18n-TR%20%7C%20EN%20%7C%20DE-emerald.svg)](https://github.com/ERAYQ1/YARE-Control-Panel)
 
-**YARE Control Panel**, Linux sunucularınızı ve yerel sistemlerinizi modern, ultra hızlı ve yüksek güvenlik standartlarında yönetmenizi sağlayan açık kaynaklı sunucu yönetim platformudur. Vercel ve Supabase estetiğinde tasarlanan Obsidian Black arayüzü, bağımsız Go backend mimarisi içine gömülü React SPA (`embed.FS`) ile sunucunuza saniyeler içinde kurulur ve Node.js bağımlılığı olmadan tek bir binary olarak çalışır.
+**YARE Control Panel** is a modern, high-performance, open-source server management platform designed to manage Linux servers and local systems securely and effortlessly. Crafted with an Obsidian Black dark aesthetic inspired by Vercel and Supabase, YARE compiles into a single, self-contained Go executable with embedded React SPA assets (`embed.FS`). It deploys in seconds without requiring Node.js on your server.
 
 ---
 
-## ⚡ Hızlı Başlangıç (Kurulum Yöntemleri)
+## ⚡ Quick Start (Installation Methods)
 
-İhtiyacınıza uygun olan kurulum yöntemini seçerek YARE Control Panel'i anında çalıştırabilirsiniz:
+Choose the installation method that best suits your setup:
 
-### 🐳 1️⃣ Docker Compose (En Kolay & Önerilen Yöntem)
+### 🐳 1️⃣ Docker Compose (Easiest & Recommended)
 
-Ne Node.js, ne Go, ne de harici bağımlılık kurulumu gerektirir. Sisteminizde Docker yüklü ise **tek komutla** başlatın:
+No Node.js, Go, or external toolchain required. If Docker is installed on your machine, launch YARE with **a single command**:
 
 ```bash
-# Projeyi indirin veya klonlayın
+# Clone the repository
 git clone https://github.com/ERAYQ1/YARE-Control-Panel.git
 cd YARE-Control-Panel
 
-# Docker Compose ile arka planda çalıştırın
+# Run in background via Docker Compose
 docker compose up -d
 ```
 
-- 🌐 **Panel Adresi**: `http://localhost:8080` (Veya `http://<sunucu-ip>:8080`)
-- 🛑 **Durdurmak için**: `docker compose down`
+- 🌐 **Dashboard Access**: `http://localhost:8080` (or `http://<server-ip>:8080`)
+- 🛑 **Stop Service**: `docker compose down`
 
 ---
 
-### 🐧 2️⃣ Linux Sunucu Otomatik Kurulumu (Tek Komutla Curl Script)
+### 2️⃣ Linux One-Command Installer (Curl Script)
 
-Herhangi bir **Ubuntu 22+, Debian 12+, Fedora, Arch veya AlmaLinux** sunucuda tek komutla kurulum yapın. Root yetkisiyle kurulduğunda `systemd` servisi (`yare.service`) ve firewall portu (`8080`) otomatik yapılandırılır. Non-root çalıştırılırsa ev dizinine (`~/.yare`) kurulur. Sunucuda Go yoksa otomatik indirilir ve build alınır:
+Install automatically on any **Ubuntu 22+, Debian 12+, Fedora, Arch, or AlmaLinux** server. Running with root privileges configures a systemd daemon (`yare.service`) and firewall ports (`8080`). Non-root installations install locally to `~/.yare`. If Go is not present, the installer downloads Go 1.22.5 and builds from source automatically:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ERAYQ1/YARE-Control-Panel/main/install/install.sh | bash
 ```
 
-> **Kurulum Scripti Ne Yapar?**
-> 1. Sistem mimarisini (`amd64` / `arm64`) ve OS dağıtımını tespit eder.
-> 2. GitHub Releases üzerinden hazır derlenmiş binary'yi indirir; eğer bulunamazsa Go 1.22.5'i indirip kaynak koddan otomatik derleme (fallback build) yapar.
-> 3. Root modunda `/etc/systemd/system/yare.service` oluşturur, servisi başlatır ve UFW / FirewallD portunu açar.
+> **What does the installer script do?**
+> 1. Detects system architecture (`amd64` / `arm64`) and Linux distribution.
+> 2. Downloads pre-compiled standalone binary from GitHub Releases (with automatic local Go 1.22.5 build fallback).
+> 3. Registers `/etc/systemd/system/yare.service`, enables auto-start, and opens firewall port `8080` (UFW / FirewallD).
 
 ---
 
-### 🚀 3️⃣ Sıfır Bağımlılık - Taşınabilir Executable (.exe / Binary)
+### 🚀 3️⃣ Zero-Dependency Portable Executable (.exe / Binary)
 
-Sunucunuzda veya bilgisayarınızda hiçbir geliştirme aracı olmadan çalıştırmak için:
+Run YARE without any development tools or installation steps:
 
-1. [GitHub Releases](https://github.com/ERAYQ1/YARE-Control-Panel/releases) sayfasından işletim sisteminize uygun dosyayı indirin:
+1. Download the pre-compiled binary for your OS from [GitHub Releases](https://github.com/ERAYQ1/YARE-Control-Panel/releases):
    - **Windows**: `yare-panel-windows-amd64.exe`
    - **Linux**: `yare-panel-linux-amd64`
    - **macOS**: `yare-panel-darwin-amd64` / `yare-panel-darwin-arm64`
-2. Dosyayı çalıştırılabilir yapıp başlatın:
+2. Make it executable and run:
    ```bash
    # Linux / macOS
    chmod +x yare-panel-linux-amd64
@@ -66,32 +66,32 @@ Sunucunuzda veya bilgisayarınızda hiçbir geliştirme aracı olmadan çalışt
    :: Windows (CMD)
    .\yare-panel-windows-amd64.exe
    ```
-3. Paneline **`http://localhost:8080`** adresinden anında erişin!
+3. Open **`http://localhost:8080`** in your browser!
 
 ---
 
-### 🛠️ 4️⃣ Yerel Geliştirici Ortamı (Kaynak Koddan)
+### 🛠️ 4️⃣ Local Development Setup (From Source)
 
-Katkıda bulunmak veya kaynak kod üzerinden canlı geliştirme (`hot-reload`) yapmak için:
+To contribute or develop with hot-reload enabled:
 
 #### 🪟 Windows:
 ```cmd
-:: Bağımlılıkları yükler ve dev sunucularını başlatır
+:: Install dependencies and launch dev servers
 .\start.bat
 
-:: Veya tek tıkla bağımsız .exe üretmek için:
+:: Or build a single standalone yare-panel.exe:
 .\build-win.bat
 ```
 
 #### 🐧 Linux / 🍎 macOS:
 ```bash
-# 1. Monorepo bağımlılıklarını kurun
+# 1. Install monorepo dependencies
 make setup
 
-# 2. Frontend (Vite) & Backend (Go) servislerini eşzamanlı başlatın
+# 2. Start Frontend (Vite) & Backend (Go) concurrently
 make dev
 
-# 3. Üretim binary'sini derleyin
+# 3. Compile standalone production binary
 make build
 ```
 
@@ -100,89 +100,89 @@ make build
 
 ---
 
-## 🔑 Varsayılan Giriş Bilgileri & Güvenlik
+## 🔑 Default Credentials & Initial Security
 
-Kurulum tamamlandıktan sonra taraıcıdan paneline erişin:
+Access the panel after installation:
 
-- **Panel Adresi**: `http://localhost:8080`
-- **Kullanıcı Adı**: `admin`
-- **Varsayılan Şifre**: `admin123`
+- **Dashboard URL**: `http://localhost:8080`
+- **Default Username**: `admin`
+- **Default Password**: `admin123`
 
-> 🛡️ **Güvenlik Uyarısı**: İlk kurulumda `admin:admin123` varsayılan şifresi kullanıldığında sistem otomatik güvenlik uyarısı verir. Giriş yaptıktan sonra **Settings -> Account** bölümünden şifrenizi değiştirmeniz zorunludur.
+> 🛡️ **Security Alert**: The system flags the default `admin:admin123` credentials on first login. You must update your password in **Settings -> Account** after logging in.
 
 ---
 
-## ⚙️ Ortam Değişkenleri (Environment Variables)
+## ⚙️ Environment Variables
 
-YARE Control Panel aşağıdaki ortam değişkenleri ile özelleştirilebilir:
+Customize YARE Control Panel using environment variables:
 
-| Değişken | Varsayılan | Açıklama |
+| Variable | Default | Description |
 | :--- | :--- | :--- |
-| `PORT` | `8080` | Panel sunucusunun dinleyeceği HTTP portu |
-| `ENV` | `production` | Çalışma modu (`development` veya `production`) |
-| `DB_PATH` | `/opt/yare/yare.db` | SQLite veritabanı dosyasının kaydedileceği yol |
-| `JWT_SECRET` | *(Otomatik Üretilir)* | JWT oturum anahtarı (32+ karakter gizli metin) |
+| `PORT` | `8080` | HTTP listening port |
+| `ENV` | `production` | Execution environment (`development` or `production`) |
+| `DB_PATH` | `/opt/yare/yare.db` | SQLite database file storage path |
+| `JWT_SECRET` | *(Auto-generated)* | Secret key for signing JWT tokens (32+ chars) |
 
 ---
 
-## 🔧 Linux Servis Yönetimi & Loglar
+## 🔧 Linux Service Management & Logs
 
-Systemd ile çalışan Linux sunucularda paneli yönetmek için komutlar:
+For Linux installations running via Systemd:
 
 ```bash
-# Servis Durumunu Kontrol Et
+# Check service status
 systemctl status yare.service
 
-# Servisi Yeniden Başlat / Durdur
+# Restart or Stop service
 systemctl restart yare.service
 systemctl stop yare.service
 
-# Canlı Sistem Loglarını İzle
+# View live system logs
 journalctl -u yare.service -f --no-pager
 ```
 
 ---
 
-## 🛠️ Geliştirici Komutları Referansı
+## 🛠️ Developer Commands Reference
 
-| Komut | Açıklama |
+| Command | Description |
 | :--- | :--- |
-| `npm run setup` | Monorepo ve frontend bağımlılıklarını kurar |
-| `npm run dev` | Frontend (5173) ve Backend (8080) dev sunucularını eşzamanlı çalıştırır |
-| `npm run build` | React SPA'yı derler, backend'e gömer ve Linux binary üretir |
-| `npm run build:win` | Windows için bağımsız `yare-panel.exe` üretime hazırlar |
-| `npm run docker:up` | Docker Compose ile konteyneri başlatır |
-| `npm run docker:down` | Docker Compose konteynerini kapatır |
-| `make build` | Makefile ile üretim derlemesi yapar |
-| `make clean` | Tüm derleme çıktılarını ve geçici dosyaları temizler |
+| `npm run setup` | Installs root monorepo and frontend dependencies |
+| `npm run dev` | Runs Vite frontend (5173) and Go backend (8080) concurrently |
+| `npm run build` | Compiles React SPA, embeds assets into Go backend, and builds binary |
+| `npm run build:win` | Compiles standalone `yare-panel.exe` for Windows |
+| `npm run docker:up` | Starts containers via Docker Compose |
+| `npm run docker:down` | Stops Docker Compose containers |
+| `make build` | Runs full production build pipeline via Makefile |
+| `make clean` | Removes build artifacts and temporary files |
 
 ---
 
-## 📡 API & WebSockets Referansı
+## 📡 API & WebSockets Reference
 
-| Endpoint | Method | Açıklama |
+| Endpoint | Method | Description |
 | :--- | :--- | :--- |
-| `/health` | `GET` | Sunucu sağlık ve durum denetimi |
-| `/api/v1/auth/login` | `POST` | Giriş işlemi (Rate limited: max 5 req/min) |
-| `/api/v1/auth/refresh` | `POST` | Refresh token ile yeni JWT token alma |
-| `/api/v1/auth/me` | `GET` | Oturum açan kullanıcı detayları |
-| `/api/v1/ws/metrics` | `WS` | Gerçek zamanlı CPU/RAM/Disk/Ağ telemetri akışı |
-| `/api/v1/ws/terminal` | `WS` | Web tabanlı etkileşimli terminal WebSocket bağlantısı |
+| `/health` | `GET` | Server health check endpoint |
+| `/api/v1/auth/login` | `POST` | User authentication (Rate limited: max 5 req/min) |
+| `/api/v1/auth/refresh` | `POST` | Refresh access token using refresh token |
+| `/api/v1/auth/me` | `GET` | Authenticated user profile details |
+| `/api/v1/ws/metrics` | `WS` | Realtime CPU/RAM/Disk/Network telemetry WebSocket stream |
+| `/api/v1/ws/terminal` | `WS` | Web-based interactive terminal WebSocket stream |
 
 ---
 
-## ✨ Öne Çıkan Özellikler
+## ✨ Key Features
 
-- 🚀 **Tek Parça Bağımsız Binary (`embed.FS`)**: React SPA uygulaması Go executable dosyasının içine gömülüdür. Sunucuda Node.js gerektirmez!
-- ⚡ **Düşük Kaynak Tüketimi**: SQLite veritabanı ile boşta 30MB'ın altında ultra düşük RAM kullanımı.
-- 🎨 **Obsidian Black Estetiği**: Modern karanlık tema, yüksek kontrast, net kenarlıklar ve akıcı animasyonlar.
-- 📦 **1-Tık Docker Uygulama Kataloğu**: PostgreSQL, Redis, Ollama AI, n8n, Nextcloud vb. tek tıkla kurma ve yönetme.
-- 🤖 **AI Copilot & Otomatik Komutlar**: Doğal dil ile sunucu analizi ve otomatik sorun giderme.
-- 🌍 **Çoklu Dil Desteği**: Türkçe 🇹🇷, English 🇬🇧, Deutsch 🇩🇪 dinamik dil geçişi.
-- ⌨️ **Komut Paleti (`⌘K` / `Ctrl+K`)**: Her sayfadan tüm aksiyonlara ve arayüzlere anında erişim.
+- 🚀 **Single Self-Contained Binary (`embed.FS`)**: React SPA is embedded directly into the Go executable. Zero Node.js runtime required on servers!
+- ⚡ **Ultra-Low Memory Footprint**: SQLite database engine consuming under 30MB RAM at idle.
+- 🎨 **Obsidian Black Design System**: Premium dark theme inspired by Vercel & Supabase with smooth micro-animations.
+- 📦 **1-Click Docker App Catalog**: Deploy & manage PostgreSQL, Redis, Ollama AI, n8n, Nextcloud, and more instantly.
+- 🤖 **AI Copilot & Smart Troubleshooting**: Natural language server telemetry analysis and command generation.
+- 🌍 **Multilingual (i18n)**: Seamless dynamic language switching between English 🇬🇧, Turkish 🇹🇷, and German 🇩🇪.
+- ⌨️ **Command Palette (`⌘K` / `Ctrl+K`)**: Instant navigation and global shortcuts across all modules.
 
 ---
 
-## 📄 Lisans
+## 📄 License
 
-Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır.
+This project is licensed under the [MIT License](LICENSE).
