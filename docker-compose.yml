@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  yare-panel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: yare-panel
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - ENV=production
+      - DB_PATH=/opt/yare/yare.db
+      - JWT_SECRET=yare_secret_key_change_in_production_32bytes
+    volumes:
+      - yare_data:/opt/yare
+      - yare_config:/etc/yare
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  yare_data:
+    driver: local
+  yare_config:
+    driver: local

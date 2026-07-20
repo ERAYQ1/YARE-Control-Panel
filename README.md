@@ -1,83 +1,133 @@
-# YARE Panel 🚀
+# YARE Control Panel 🚀
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8.svg)](https://go.dev/)
 [![React](https://img.shields.io/badge/React-18%2F19-61DAFB.svg)](https://react.dev/)
-[![TailwindCSS](https://img.shields.io/badge/Tailwind-v3%2Fv4-38BDF8.svg)](https://tailwindcss.com/)
 [![Docker Ready](https://img.shields.io/badge/Docker-Supported-2496ED.svg)](https://www.docker.com/)
-[![Languages](https://img.shields.io/badge/i18n-TR%20%7C%20EN%20%7C%20DE-emerald)](https://github.com/ERAYQ1/YARE-Control-Panel)
+[![i18n](https://img.shields.io/badge/i18n-TR%20%7C%20EN%20%7C%20DE-emerald)](https://github.com/ERAYQ1/YARE-Control-Panel)
 
-**YARE Panel** is an open-source, lightweight, modular, modern server management platform. Built with Vercel/Supabase-level developer craft aesthetics, high performance, and OWASP-grade security, YARE Panel aims to be the first application installed on any fresh Linux server.
-
-> **Note**: This is NOT a hosting panel or another cPanel clone. It is a universal server management platform.
+**YARE Control Panel**, sunucularınızı modern, hızlı ve güvenli bir şekilde yönetmenizi sağlayan açık kaynaklı sunucu yönetim platformudur. Vercel/Supabase seviyesinde tasarım estetiği, bağımsız (embedded SPA) Go mimarisi ve yüksek performansı ile yeni kurulan herhangi bir Linux sunucusuna veya yerel ortama saniyeler içinde yüklenebilir.
 
 ---
 
-## ✨ Production Linux Installation & Architecture Audit
+## ⚡ Hızlı Başlangıç (3 Kolay Kurulum Yöntemi)
 
-- 🚀 **Single Self-Contained Binary**: The React SPA is compiled & embedded directly into the Go executable via `embed.FS`. Production Linux nodes need **zero Node.js or npm dependencies**—just one standalone binary!
-- 🛡️ **Automated Linux Security & Firewall**: `install.sh` generates a 64-character random JWT secret (`/etc/yare/jwt.secret`), sets 600 file permissions, opens UFW/firewalld port `8080`, and registers a systemd restart daemon (`yare.service`).
-- ⚡ **High Performance & Low Memory**: Go (Gin) backend with embedded SQLite database (`yare.db`). Idle memory footprint is under 30MB.
-- 🎨 **Vercel / Supabase Craft Aesthetics**: Obsidian black palette (`#09090b`), sharp 1px borders, zero AI gradient clutter, and technical monospace typography.
-- 📦 **1-Click App Catalog & Reverse Proxy**: Deploy 1-click Docker stacks (PostgreSQL, Redis, Ollama AI, n8n, Nextcloud) & manage Nginx/Caddy proxy domains with Let's Encrypt SSL.
-- 🏛️ **Multi-Node Swarm Cluster**: Manage multiple remote cloud VPS instances (Hetzner, AWS, HomeLab) from a single control plane over mTLS.
-- 🤖 **AI Copilot & Self-Healing Playbooks**: Natural language server diagnostics & automated remediation triggers (e.g. disk auto-prune, brute-force IP ban).
-- 🌍 **3-Language Support (i18n)**: Seamless dynamic switching between **Türkçe 🇹🇷**, **English 🇬🇧**, and **Deutsch 🇩🇪**.
-- ⌨️ **Global Command Palette (`⌘K`)**: Instant search overlay to navigate anywhere across pages, services, commands, and docker stacks.
+Aşağıdaki 3 yöntemden size en uygun olanını seçerek YARE Control Panel'i anında çalıştırabilirsiniz:
 
----
+### 1️⃣ Linux Sunucu Otomatik Kurulumu (Önerilen Canlı Ortam)
 
-## 🖥️ Supported Operating Systems & Architectures
-
-- **Ubuntu** 24+
-- **Debian** 13+
-- **Fedora**
-- **Rocky Linux**
-- **AlmaLinux**
-- **Arch Linux**
-- **Architectures**: `x86_64` (amd64), `aarch64` (arm64), `armv7l`
-
----
-
-## ⚡ One-Command Production Linux Installation
-
-Install YARE Panel on your Linux server with a single command:
+Herhangi bir **Ubuntu, Debian, Fedora, Arch veya AlmaLinux** sunucusunda tek komutla kurulum yapın:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ERAYQ1/YARE-Control-Panel/main/install/install.sh | bash
 ```
 
-Once installed, access the dashboard at: `http://<your-server-ip>:8080`
-
-Default credentials:
-- **Username**: `admin`
-- **Password**: `admin123`
+> **Ne yapar?** Gerekli bağımlılıkları yükler, güvenlik için 64-karakterlik JWT anahtarı oluşturur, firewall portunu (`8080`) açar ve otomatik başlayan bir `systemd` servisi (`yare.service`) oluşturur.
 
 ---
 
-## 🛠️ Local Development Setup
+### 2️⃣ Docker Compose ile Konteyner Kurulumu
 
-### Prerequisites
-- Node.js 20+ & npm
-- Go 1.22+
+Sisteminizde Docker yüklü ise tek komutla konteyner içinde başlatın:
 
-### Running Frontend
 ```bash
-cd apps/frontend
-npm install
+docker compose up -d
+```
+
+Durdurmak için:
+```bash
+docker compose down
+```
+
+---
+
+### 3️⃣ Yerel Geliştirme Ortamı (Windows, macOS, Linux)
+
+Geliştirici ortamında Frontend ve Backend'i **tek komutla** çalıştırmak için:
+
+#### 🪟 Windows (En Kolay Yöntem):
+Proje dizininde `start.bat` dosyasına **çift tıklayın** veya terminalden çalıştırın:
+```cmd
+.\start.bat
+```
+
+#### 🐧 Linux / 🍎 macOS / 🪟 Terminal:
+```bash
+# 1. Tüm bağımlılıkları tek seferde kurun
+npm run setup
+
+# 2. Frontend ve Backend'i eşzamanlı olarak tek komutla başlatın
 npm run dev
 ```
-Dev server will run at `http://localhost:5173`.
 
-### Running Backend (Cross-Platform Emulation & Native Linux)
-```bash
-cd apps/backend
-go run main.go
-```
-API server will run at `http://localhost:8080`.
+> 💡 `npm run dev` komutu frontend (`http://localhost:5173`) ve backend (`http://localhost:8080`) servislerini aynı terminal penceresinde renkli loglar ile çalıştırır.
 
 ---
 
-## 📄 License
+## 🔑 Varsayılan Giriş Bilgileri
 
-Distributed under the [MIT License](LICENSE).
+Kurulum tamamlandıktan sonra taraıcıdan paneline erişin:
+
+- **Panel Adresi**: `http://localhost:8080` *(Veya `http://<sunucu-ip>:8080`)*
+- **Kullanıcı Adı**: `admin`
+- **Şifre**: `admin123`
+
+---
+
+## 🛠️ Geliştirici Komutları Referansı
+
+| Komut | Açıklama |
+| :--- | :--- |
+| `npm run setup` | Tüm monorepo bağımlılıklarını kurar (`root` ve `apps/frontend`) |
+| `npm run dev` | Frontend ve Backend servislerini eşzamanlı çalıştırır |
+| `npm run build` | Frontend'i derler, statik dosyaları Go backend'e gömer ve Linux binary üretir |
+| `npm run docker:up` | Docker Compose ile konteyneri arka planda başlatır |
+| `npm run docker:down` | Docker Compose konteynerini durdurur |
+| `make dev` | *(Alternatif)* Makefile ile geliştirici modunu başlatır |
+| `make build` | *(Alternatif)* Makefile ile prodüksiyon derlemesi yapar |
+
+---
+
+## ⚙️ Ortam Değişkenleri (Environment Variables)
+
+| Değişken | Varsayılan Değer | Açıklama |
+| :--- | :--- | :--- |
+| `PORT` | `8080` | Sunucunun dinleyeceği port |
+| `ENV` | `development` / `production` | Çalışma ortamı modu |
+| `DB_PATH` | `/opt/yare/yare.db` | SQLite veritabanı dosya yolu |
+| `JWT_SECRET` | *(Otomatik Oluşturulur)* | JWT Kimlik doğrulama gizli anahtarı |
+
+---
+
+## 🔧 Linux Servis Yönetimi & Loglar
+
+Linux sunucunuzda çalışan YARE servisini yönetmek için:
+
+```bash
+# Servis Durumunu Kontrol Et
+systemctl status yare.service
+
+# Servisi Yeniden Başlat
+systemctl restart yare.service
+
+# Canlı Logları İzle
+journalctl -u yare.service -f
+```
+
+---
+
+## ✨ Öne Çıkan Özellikler
+
+- 🚀 **Tek Parça Bağımsız Binary (Embedded SPA)**: React SPA uygulaması Go executable dosyasının içine gömülüdür (`embed.FS`). Sunucuda Node.js gerektirmez!
+- ⚡ **Düşük Kaynak Tüketimi**: SQLite veritabanı ile boşta 30MB'ın altında RAM kullanımı.
+- 🎨 **Obsidian Black Estetiği**: Vercel/Supabase seviyesinde karanlık tema, net kenarlıklar ve tipografi.
+- 📦 **1-Tık Docker Uygulama Kataloğu**: PostgreSQL, Redis, Ollama AI, n8n, Nextcloud vb. tek tıkla kurma ve yönetme.
+- 🤖 **AI Copilot & Otomatik Komutlar**: Doğal dil ile sunucu analizi ve otomatik sorun giderme.
+- 🌍 **Çoklu Dil Desteği**: Türkçe 🇹🇷, English 🇬🇧, Deutsch 🇩🇪 dinamik dil geçişi.
+- ⌨️ **Komut Paleti (`⌘K` / `Ctrl+K`)**: Her yere anında erişim.
+
+---
+
+## 📄 Lisans
+
+Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır.

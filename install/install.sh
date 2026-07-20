@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # YARE Panel - Universal Server Management Platform One-Command Installer
-# Supported OS: Ubuntu 24+, Debian 13+, Fedora, Rocky Linux, AlmaLinux, Arch
+# Supported OS: Ubuntu 22+, Debian 12+, Fedora, Rocky Linux, AlmaLinux, Arch
 # ==============================================================================
 
 set -eo pipefail
@@ -37,11 +37,9 @@ esac
 echo -e "${CYAN}[1/6] Performing System & OS Compatibility Checks...${NC}"
 if [ -f /etc/os-release ]; then
   . /etc/os-release
-  OS=$ID
-  echo -e "${GREEN}[OK] Detected System: ${PRETTY_NAME} (${ARCH})${NC}"
+  echo -e "${GREEN}[OK] Detected System: ${PRETTY_NAME:-Linux} (${ARCH})${NC}"
 else
-  echo -e "${RED}[ERROR] Operating system information not found.${NC}"
-  exit 1
+  echo -e "${YELLOW}[WARN] Operating system information file not found, proceeding...${NC}"
 fi
 
 # Install Dependencies
@@ -55,14 +53,30 @@ elif command -v pacman &> /dev/null; then
 fi
 
 # Setup Directory & Service User
-echo -e "${CYAN}[3/6] Configuring service user and security paths...${NC}"
+echo -e "${CYAN}[3/6] Configuring service paths and binary setup...${NC}"
 mkdir -p /opt/yare /var/log/yare /etc/yare
 id -u yare &>/dev/null || useradd -r -s /bin/false -d /opt/yare yare
+
+# Copy local binary if running from source repo
+if [ -f "./apps/backend/bin/yare-backend" ]; then
+  cp "./apps/backend/bin/yare-backend" /opt/yare/yare-backend
+  chmod +x /opt/yare/yare-backend
+elif [ -f "./yare-backend" ]; then
+  cp "./yare-backend" /opt/yare/yare-backend
+  chmod +x /opt/yare/yare-backend
+elif [ ! -f "/opt/yare/yare-backend" ]; then
+  echo -e "${YELLOW}[INFO] Fetching latest YARE Panel binary for ${BINARY_ARCH}...${NC}"
+  LATEST_URL="https://github.com/ERAYQ1/YARE-Control-Panel/releases/latest/download/yare-backend-linux-${BINARY_ARCH}"
+  curl -fsSL "$LATEST_URL" -o /opt/yare/yare-backend || {
+    echo -e "${YELLOW}[WARN] Release binary not found online. Please build binary locally using 'npm run build' first.${NC}"
+  }
+  chmod +x /opt/yare/yare-backend 2>/dev/null || true
+fi
 
 # Generate Secure JWT Secret if missing
 JWT_SECRET_FILE="/etc/yare/jwt.secret"
 if [ ! -f "$JWT_SECRET_FILE" ]; then
-  cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1 > "$JWT_SECRET_FILE"
+  cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1 > "$JWT_SECRET_FILE" || echo "yare_default_secret_key_change_in_production_32bytes" > "$JWT_SECRET_FILE"
   chmod 600 "$JWT_SECRET_FILE"
 fi
 JWT_SECRET=$(cat "$JWT_SECRET_FILE")
@@ -107,7 +121,7 @@ systemctl daemon-reload
 systemctl enable --now yare.service &>/dev/null || true
 
 # Get Server Primary IP
-SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "your-server-ip")
+SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
 
 echo -e "${GREEN}${BOLD}"
 echo "======================================================================"
@@ -117,4 +131,5 @@ echo -e "${NC}"
 echo -e "Dashboard URL : ${CYAN}${BOLD}http://${SERVER_IP}:8080${NC}"
 echo -e "Default User  : ${CYAN}${BOLD}admin${NC}"
 echo -e "Default Pass  : ${CYAN}${BOLD}admin123${NC}"
+echo -e "Status Command: ${YELLOW}systemctl status yare.service${NC}"
 echo -e "Service Log   : ${YELLOW}journalctl -u yare.service -f${NC}\n"

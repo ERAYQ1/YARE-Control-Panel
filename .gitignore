@@ -9,6 +9,7 @@ yarn-error.log*
 dist/
 build/
 bin/
+!apps/backend/dist/.gitkeep
 *.exe
 *.exe?
 *.dll
