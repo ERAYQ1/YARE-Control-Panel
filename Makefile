@@ -23,7 +23,6 @@ dev:
 	npm run dev
 
 build:
-	@cd apps/backend && go mod tidy
 	npm run build
 
 docker-build:

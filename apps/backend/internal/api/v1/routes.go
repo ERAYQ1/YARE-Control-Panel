@@ -27,8 +27,8 @@ func RegisterRoutes(r *gin.Engine, jwtSecret string) {
 
 	v1 := r.Group("/api/v1")
 	{
-		// Public Auth Endpoints
-		v1.POST("/auth/login", authCtrl.Login)
+		// Public Auth Endpoints (5 login attempts per minute per IP)
+		v1.POST("/auth/login", middleware.RateLimitMiddleware(5, 1*time.Minute), authCtrl.Login)
 		v1.POST("/auth/refresh", authCtrl.Refresh)
 
 		// Public WebSockets

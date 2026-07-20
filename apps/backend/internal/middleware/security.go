@@ -27,21 +27,21 @@ type rateLimiter struct {
 	requests map[string][]time.Time
 }
 
-var globalLimiter = &rateLimiter{
-	requests: make(map[string][]time.Time),
-}
-
-// RateLimitMiddleware enforces maximum 120 requests per minute per IP address.
+// RateLimitMiddleware enforces maximum requests per window per IP address for the applied handler.
 func RateLimitMiddleware(maxReqs int, window time.Duration) gin.HandlerFunc {
+	limiter := &rateLimiter{
+		requests: make(map[string][]time.Time),
+	}
+
 	return func(c *gin.Context) {
 		ip := c.ClientIP()
 
-		globalLimiter.mu.Lock()
+		limiter.mu.Lock()
 		now := time.Now()
 		cutoff := now.Add(-window)
 
 		// Filter old requests
-		reqs := globalLimiter.requests[ip]
+		reqs := limiter.requests[ip]
 		var valid []time.Time
 		for _, t := range reqs {
 			if t.After(cutoff) {
@@ -50,7 +50,7 @@ func RateLimitMiddleware(maxReqs int, window time.Duration) gin.HandlerFunc {
 		}
 
 		if len(valid) >= maxReqs {
-			globalLimiter.mu.Unlock()
+			limiter.mu.Unlock()
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"error":   "Rate limit exceeded. Too many requests.",
 				"retryIn": "60s",
@@ -60,8 +60,8 @@ func RateLimitMiddleware(maxReqs int, window time.Duration) gin.HandlerFunc {
 		}
 
 		valid = append(valid, now)
-		globalLimiter.requests[ip] = valid
-		globalLimiter.mu.Unlock()
+		limiter.requests[ip] = valid
+		limiter.mu.Unlock()
 
 		c.Next()
 	}

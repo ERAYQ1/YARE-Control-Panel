@@ -2,7 +2,6 @@ package system
 
 import (
 	"math"
-	"math/rand"
 	"os"
 	"runtime"
 	"time"
@@ -60,11 +59,11 @@ type SystemMetrics struct {
 }
 
 type CPUSpec struct {
-	Model       string    `json:"model"`
-	Cores       int       `json:"cores"`
-	UsagePercent float64  `json:"usagePercent"`
-	Temperature float64   `json:"temperature,omitempty"`
-	LoadAverage [3]float64 `json:"loadAverage"`
+	Model        string    `json:"model"`
+	Cores        int       `json:"cores"`
+	UsagePercent float64   `json:"usagePercent"`
+	Temperature  float64   `json:"temperature,omitempty"`
+	LoadAverage  [3]float64 `json:"loadAverage"`
 }
 
 type MemSpec struct {
@@ -112,35 +111,32 @@ var lastSampleTime time.Time
 
 func CollectMetrics() *SystemMetrics {
 	hostname, _ := os.Hostname()
+	if hostname == "" {
+		hostname = "yare-server"
+	}
 	hostInfo, _ := host.Info()
 
-	// Fallbacks
-	if hostname == "" {
-		hostname = "yare-server-node-1"
-	}
 	osName := runtime.GOOS
-	if hostInfo != nil && hostInfo.Platform != "" {
-		osName = hostInfo.Platform + " " + hostInfo.PlatformVersion
-	}
-	kernelVersion := "6.8.0-40-generic"
-	if hostInfo != nil && hostInfo.KernelVersion != "" {
+	var kernelVersion string
+	var uptime uint64
+	if hostInfo != nil {
+		if hostInfo.Platform != "" {
+			osName = hostInfo.Platform + " " + hostInfo.PlatformVersion
+		}
 		kernelVersion = hostInfo.KernelVersion
-	}
-	uptime := uint64(86400*3 + 14*3600 + 22*60)
-	if hostInfo != nil && hostInfo.Uptime > 0 {
 		uptime = hostInfo.Uptime
 	}
 
 	// CPU Stats
 	cpuPercents, _ := cpu.Percent(0, false)
-	cpuUsage := 12.5
+	var cpuUsage float64
 	if len(cpuPercents) > 0 {
 		cpuUsage = cpuPercents[0]
 	}
 	cpuInfo, _ := cpu.Info()
-	cpuModel := "Intel(R) Xeon(R) Gold 6330 CPU @ 2.00GHz"
+	cpuModel := "Generic CPU"
 	cores := runtime.NumCPU()
-	if len(cpuInfo) > 0 {
+	if len(cpuInfo) > 0 && cpuInfo[0].ModelName != "" {
 		cpuModel = cpuInfo[0].ModelName
 	}
 
@@ -153,11 +149,6 @@ func CollectMetrics() *SystemMetrics {
 		memUsed = vMem.Used
 		memFree = vMem.Free
 		memPercent = vMem.UsedPercent
-	} else {
-		memTotal = 16 * 1024 * 1024 * 1024
-		memUsed = 6 * 1024 * 1024 * 1024
-		memFree = 10 * 1024 * 1024 * 1024
-		memPercent = 37.5
 	}
 
 	swapMem, _ := mem.SwapMemory()
@@ -192,16 +183,6 @@ func CollectMetrics() *SystemMetrics {
 		}
 	}
 
-	if len(drives) == 0 {
-		drives = []MountedDrive{
-			{Device: "/dev/sda1", MountPoint: "/", FSType: "ext4", Total: 500 * 1024 * 1024 * 1024, Used: 120 * 1024 * 1024 * 1024, Free: 380 * 1024 * 1024 * 1024, UsagePercent: 24.0},
-			{Device: "/dev/sdb1", MountPoint: "/var/lib/docker", FSType: "ext4", Total: 1000 * 1024 * 1024 * 1024, Used: 210 * 1024 * 1024 * 1024, Free: 790 * 1024 * 1024 * 1024, UsagePercent: 21.0},
-		}
-		diskTotal = 1500 * 1024 * 1024 * 1024
-		diskUsed = 330 * 1024 * 1024 * 1024
-		diskFree = 1170 * 1024 * 1024 * 1024
-	}
-
 	diskUsagePercent := 0.0
 	if diskTotal > 0 {
 		diskUsagePercent = (float64(diskUsed) / float64(diskTotal)) * 100
@@ -234,54 +215,62 @@ func CollectMetrics() *SystemMetrics {
 	lastTx = totalTx
 	lastSampleTime = now
 
+	netInterfaces, _ := net.Interfaces()
+	var ifaceInfos []NetworkInterfaceInfo
+	for _, iface := range netInterfaces {
+		var ipAddr string
+		if len(iface.Addrs) > 0 {
+			ipAddr = iface.Addrs[0].Addr
+		}
+		isUp := false
+		for _, flag := range iface.Flags {
+			if flag == "up" {
+				isUp = true
+				break
+			}
+		}
+		ifaceInfos = append(ifaceInfos, NetworkInterfaceInfo{
+			Name:       iface.Name,
+			IPAddress:  ipAddr,
+			MACAddress: iface.HardwareAddr,
+			IsUp:       isUp,
+		})
+	}
+
 	// Processes
 	procList, _ := process.Processes()
 	var topCPU []ProcessInfo
 	var topMem []ProcessInfo
+	runningCount := 0
 
 	for i, p := range procList {
-		if i > 8 {
-			break
+		status, _ := p.Status()
+		if len(status) > 0 && (status[0] == "R" || status[0] == "running") {
+			runningCount++
 		}
-		name, _ := p.Name()
-		user, _ := p.Username()
-		cpuP, _ := p.CPUPercent()
-		memP, _ := p.MemoryPercent()
-		memInfo, _ := p.MemoryInfo()
-		var mUsage uint64
-		if memInfo != nil {
-			mUsage = memInfo.RSS
-		}
+		if i < 10 {
+			name, _ := p.Name()
+			user, _ := p.Username()
+			cpuP, _ := p.CPUPercent()
+			memP, _ := p.MemoryPercent()
+			memInfo, _ := p.MemoryInfo()
+			var mUsage uint64
+			if memInfo != nil {
+				mUsage = memInfo.RSS
+			}
 
-		proc := ProcessInfo{
-			PID:        p.Pid,
-			Name:       name,
-			User:       user,
-			CPUPercent: math.Round(cpuP*10) / 10,
-			MemPercent: memP,
-			MemUsage:   mUsage,
-			Status:     "running",
+			proc := ProcessInfo{
+				PID:        p.Pid,
+				Name:       name,
+				User:       user,
+				CPUPercent: math.Round(cpuP*10) / 10,
+				MemPercent: memP,
+				MemUsage:   mUsage,
+				Status:     "running",
+			}
+			topCPU = append(topCPU, proc)
+			topMem = append(topMem, proc)
 		}
-		topCPU = append(topCPU, proc)
-		topMem = append(topMem, proc)
-	}
-
-	if len(topCPU) == 0 {
-		topCPU = []ProcessInfo{
-			{PID: 1042, Name: "dockerd", User: "root", CPUPercent: 4.2, MemPercent: 1.8, MemUsage: 280 * 1024 * 1024, Status: "running"},
-			{PID: 1894, Name: "yare-backend", User: "yare", CPUPercent: 1.1, MemPercent: 0.4, MemUsage: 45 * 1024 * 1024, Status: "running"},
-			{PID: 844, Name: "nginx", User: "www-data", CPUPercent: 0.8, MemPercent: 0.2, MemUsage: 18 * 1024 * 1024, Status: "running"},
-			{PID: 3120, Name: "postgres", User: "postgres", CPUPercent: 0.5, MemPercent: 2.1, MemUsage: 340 * 1024 * 1024, Status: "running"},
-			{PID: 4051, Name: "redis-server", User: "redis", CPUPercent: 0.3, MemPercent: 0.5, MemUsage: 78 * 1024 * 1024, Status: "running"},
-		}
-		topMem = topCPU
-	}
-
-	// Dynamic fluctuations for realtime preview animation
-	cpuUsage = math.Min(99.0, math.Max(5.0, cpuUsage+(rand.Float64()*4.0-2.0)))
-	if rxSec == 0 {
-		rxSec = int64(124000 + rand.Intn(50000))
-		txSec = int64(48000 + rand.Intn(20000))
 	}
 
 	return &SystemMetrics{
@@ -295,8 +284,6 @@ func CollectMetrics() *SystemMetrics {
 			Model:        cpuModel,
 			Cores:        cores,
 			UsagePercent: math.Round(cpuUsage*10) / 10,
-			Temperature:  42.5 + rand.Float64()*3.0,
-			LoadAverage:  [3]float64{0.45, 0.52, 0.48},
 		},
 		Memory: MemSpec{
 			Total:        memTotal,
@@ -319,21 +306,14 @@ func CollectMetrics() *SystemMetrics {
 			TxBytesSec: txSec,
 			TotalRx:    totalRx,
 			TotalTx:    totalTx,
-			Interfaces: []NetworkInterfaceInfo{
-				{Name: "eth0", IPAddress: "192.168.1.120", MACAddress: "02:42:ac:11:00:02", IsUp: true, RxBytes: totalRx, TxBytes: totalTx},
-				{Name: "docker0", IPAddress: "172.17.0.1", MACAddress: "02:42:be:89:12:ef", IsUp: true, RxBytes: 1024 * 1024 * 50, TxBytes: 1024 * 1024 * 30},
-			},
+			Interfaces: ifaceInfos,
 		},
 		Processes: ProcSpec{
-			Total:     184,
-			Running:   5,
+			Total:     len(procList),
+			Running:   runningCount,
 			TopCPU:    topCPU,
 			TopMemory: topMem,
 		},
-		DockerSummary: &DockerSummary{
-			ContainersTotal:   12,
-			ContainersRunning: 9,
-			ImagesTotal:       8,
-		},
 	}
 }
+

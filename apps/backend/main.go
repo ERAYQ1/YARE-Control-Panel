@@ -38,7 +38,9 @@ func main() {
 
 	// Configure CORS
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
+		AllowOriginFunc: func(origin string) bool {
+			return true
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -61,13 +63,14 @@ func main() {
 	// Serve Frontend SPA (Static Embed / Fallback)
 	frontendFS, err := fs.Sub(embeddedFrontend, "dist")
 	if err == nil {
+		fileServer := http.FileServer(http.FS(frontendFS))
 		r.NoRoute(func(c *gin.Context) {
 			path := c.Request.URL.Path
 			// If file exists in embedded FS, serve it, otherwise serve index.html
 			f, err := frontendFS.Open(path[1:])
 			if err == nil {
 				_ = f.Close()
-				http.FileServer(http.FS(frontendFS)).ServeHTTP(c.Writer, c.Request)
+				fileServer.ServeHTTP(c.Writer, c.Request)
 				return
 			}
 			c.FileFromFS("", http.FS(frontendFS))

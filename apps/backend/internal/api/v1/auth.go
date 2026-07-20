@@ -32,12 +32,12 @@ func (ac *AuthController) Login(c *gin.Context) {
 	}
 
 	var userID, username, email, passwordHash, role string
-	var twoFactorEnabled int
+	var twoFactorEnabled, mustChangePassword int
 
 	err := database.DB.QueryRow(`
-		SELECT id, username, email, password_hash, role, two_factor_enabled 
+		SELECT id, username, email, password_hash, role, two_factor_enabled, COALESCE(must_change_password, 0)
 		FROM users WHERE username = ?`, req.Username).Scan(
-		&userID, &username, &email, &passwordHash, &role, &twoFactorEnabled,
+		&userID, &username, &email, &passwordHash, &role, &twoFactorEnabled, &mustChangePassword,
 	)
 
 	if err != nil {
@@ -63,15 +63,19 @@ func (ac *AuthController) Login(c *gin.Context) {
 	// Update last login
 	database.DB.Exec("UPDATE users SET last_login = ? WHERE id = ?", time.Now(), userID)
 
+	forcePasswordChange := mustChangePassword == 1 || (username == "admin" && req.Password == "admin123")
+
 	c.JSON(http.StatusOK, gin.H{
-		"token":        token,
-		"refreshToken": refreshToken,
+		"token":              token,
+		"refreshToken":       refreshToken,
+		"mustChangePassword": forcePasswordChange,
 		"user": gin.H{
-			"id":               userID,
-			"username":         username,
-			"email":            email,
-			"role":             role,
-			"twoFactorEnabled": twoFactorEnabled == 1,
+			"id":                 userID,
+			"username":           username,
+			"email":              email,
+			"role":               role,
+			"twoFactorEnabled":   twoFactorEnabled == 1,
+			"mustChangePassword": forcePasswordChange,
 		},
 	})
 }

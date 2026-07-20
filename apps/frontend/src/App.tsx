@@ -45,6 +45,11 @@ export function App() {
     setCurrentUser(user);
     localStorage.setItem('yare_user', JSON.stringify(user));
     addToast('success', 'Authenticated Successfully', `Welcome back, ${user.username}!`);
+    if (user.mustChangePassword) {
+      setTimeout(() => {
+        addToast('warning', 'Security Alert', 'Default admin password in use! Please update your password in Settings.');
+      }, 600);
+    }
   };
 
   const handleLogout = () => {

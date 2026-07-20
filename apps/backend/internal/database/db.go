@@ -25,11 +25,12 @@ func createTables() {
 	queries := []string{
 		`CREATE TABLE IF NOT EXISTS users (
 			id TEXT PRIMARY KEY,
-			username TEXT UNIQUE NOT RESTRICT,
+			username TEXT UNIQUE,
 			email TEXT,
 			password_hash TEXT NOT NULL,
 			role TEXT NOT NULL,
 			two_factor_enabled INTEGER DEFAULT 0,
+			must_change_password INTEGER DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			last_login DATETIME
 		);`,
@@ -68,6 +69,9 @@ func createTables() {
 			log.Fatalf("Failed to create table: %v", err)
 		}
 	}
+
+	// Migration: Add column if missing in existing databases
+	_, _ = DB.Exec("ALTER TABLE users ADD COLUMN must_change_password INTEGER DEFAULT 0")
 }
 
 func seedAdminUser() {
@@ -83,8 +87,8 @@ func seedAdminUser() {
 		return
 	}
 
-	_, err = DB.Exec(`INSERT INTO users (id, username, email, password_hash, role) VALUES (?, ?, ?, ?, ?)`,
-		"usr_admin_default", "admin", "admin@yare.local", string(hash), "admin")
+	_, err = DB.Exec(`INSERT INTO users (id, username, email, password_hash, role, must_change_password) VALUES (?, ?, ?, ?, ?, ?)`,
+		"usr_admin_default", "admin", "admin@yare.local", string(hash), "admin", 1)
 	if err != nil {
 		log.Printf("Failed to seed default admin user: %v", err)
 	} else {

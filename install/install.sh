@@ -110,19 +110,23 @@ if [ "$INSTALLED_BINARY" -eq 0 ]; then
     echo -e "${GREEN}[OK] Downloaded release binary successfully.${NC}"
     INSTALLED_BINARY=1
   else
-    echo -e "${YELLOW}[WARN] Online release binary not found. Falling back to local automatic build...${NC}"
+    echo -e "${YELLOW}[WARN] Release binary not found on GitHub Releases. Falling back to automatic local Go build...${NC}"
     ensure_go
     
-    # Ensure backend dependencies and build
-    if [ -d "./apps/backend" ]; then
-      echo -e "${CYAN}[INFO] Building backend binary from source...${NC}"
-      (cd apps/backend && go mod tidy && CGO_ENABLED=0 go build -ldflags="-s -w" -o "$BINARY_DEST" main.go)
-      chmod +x "$BINARY_DEST"
-      INSTALLED_BINARY=1
-    else
-      echo -e "${RED}[ERROR] Source code not found in current directory. Please clone repo or download source first.${NC}"
-      exit 1
+    BUILD_DIR="."
+    if [ ! -d "./apps/backend" ]; then
+      echo -e "${CYAN}[INFO] Source code not present locally. Cloning YARE Panel repository...${NC}"
+      TMP_REPO="/tmp/yare-repo-build"
+      rm -rf "$TMP_REPO"
+      git clone --depth 1 https://github.com/ERAYQ1/YARE-Control-Panel.git "$TMP_REPO"
+      BUILD_DIR="$TMP_REPO"
     fi
+
+    echo -e "${CYAN}[INFO] Building backend binary from source...${NC}"
+    (cd "$BUILD_DIR/apps/backend" && go mod tidy && CGO_ENABLED=0 go build -ldflags="-s -w" -o "$BINARY_DEST" main.go)
+    chmod +x "$BINARY_DEST"
+    INSTALLED_BINARY=1
+    rm -rf /tmp/yare-repo-build 2>/dev/null || true
   fi
 fi
 

@@ -21,11 +21,15 @@ export function Login({ onLoginSuccess }: LoginProps) {
       const res = await api.post('/auth/login', { username, password });
       localStorage.setItem('yare_token', res.data.token);
       localStorage.setItem('yare_refresh_token', res.data.refreshToken);
-      onLoginSuccess(res.data.token, res.data.user);
+      const user = res.data.user || {};
+      if (res.data.mustChangePassword || user.mustChangePassword) {
+        user.mustChangePassword = true;
+      }
+      onLoginSuccess(res.data.token, user);
     } catch (err: any) {
       // Fallback for offline demo mode
       if (username === 'admin' && password === 'admin123') {
-        const mockUser = { id: 'usr_admin', username: 'admin', email: 'admin@yare.local', role: 'admin' };
+        const mockUser = { id: 'usr_admin', username: 'admin', email: 'admin@yare.local', role: 'admin', mustChangePassword: true };
         onLoginSuccess('mock_token', mockUser);
       } else {
         setError(err.response?.data?.error || 'Invalid credentials');
