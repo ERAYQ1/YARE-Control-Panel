@@ -1,12 +1,10 @@
-.PHONY: help setup check-go dev build docker-build docker-up docker-down clean
+.PHONY: help setup check-go dev build clean
 
 help:
 	@echo "YARE Control Panel Commands:"
 	@echo "  make setup        - Install dependencies & tidy Go modules"
 	@echo "  make dev          - Start frontend & backend concurrently"
 	@echo "  make build        - Compile React SPA & Go production binary"
-	@echo "  make docker-up    - Start YARE Panel instantly via Docker Compose"
-	@echo "  make docker-down  - Stop Docker containers"
 	@echo "  make clean        - Clean build artifacts"
 
 check-go:
@@ -26,15 +24,6 @@ build:
 	npm run build:frontend
 	node scripts/copy-dist.js
 	cd apps/backend && CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o ../../yare-panel main.go
-
-docker-build:
-	npm run docker:build
-
-docker-up:
-	npm run docker:up
-
-docker-down:
-	npm run docker:down
 
 clean:
 	rm -rf apps/frontend/dist apps/backend/dist apps/backend/bin yare-panel.exe yare-panel

@@ -144,8 +144,7 @@ if [ "$IS_ROOT" -eq 1 ]; then
   cat << EOF > /etc/systemd/system/yare.service
 [Unit]
 Description=YARE Control Panel Server Daemon
-After=network.target docker.service
-Wants=docker.service
+After=network.target
 
 [Service]
 Type=simple

@@ -12,10 +12,7 @@
     "build:backend": "cd apps/backend && go mod tidy && CGO_ENABLED=0 GOOS=linux go build -ldflags=\"-s -w\" -o ../../yare-panel main.go",
     "build": "cd apps/frontend && npm run build && node ../scripts/copy-dist.js && cd ../backend && go mod tidy && CGO_ENABLED=0 GOOS=linux go build -ldflags=\"-s -w\" -o ../../yare-panel main.go",
     "build:win": "build-win.bat",
-    "build:linux": "bash build-linux.sh",
-    "docker:build": "docker compose build",
-    "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down"
+    "build:linux": "bash build-linux.sh"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
@@ -25,7 +22,6 @@
     "control-panel",
     "dashboard",
     "linux",
-    "docker",
     "systemd"
   ],
   "author": "YARE Panel Team",
