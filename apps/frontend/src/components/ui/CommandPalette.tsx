@@ -10,7 +10,14 @@ import {
   Archive,
   Settings,
   X,
-  ArrowRight
+  ArrowRight,
+  Globe,
+  Clock,
+  Bell,
+  Network,
+  FileText,
+  Users,
+  ShieldCheck
 } from 'lucide-react';
 
 interface CommandPaletteProps {
@@ -40,14 +47,21 @@ export function CommandPalette({ isOpen, onClose, onSelectTab }: CommandPaletteP
   if (!isOpen) return null;
 
   const actions = [
-    { id: 'dashboard', title: 'Dashboard / Genel Bakış', group: 'Main', icon: LayoutDashboard, path: '5-second server status & charts' },
-    { id: 'appstore', title: 'Apps / Uygulamalar', group: 'Management', icon: Package, path: '1-Click App Store & Docker containers' },
-    { id: 'system', title: 'System / Sistem', group: 'Hardware', icon: Cpu, path: 'CPU, RAM, Storage, Network, Processes' },
-    { id: 'filemanager', title: 'Files / Dosyalar', group: 'Tools', icon: FolderKanban, path: 'Browse, edit & manage server files' },
-    { id: 'terminal', title: 'Terminal', group: 'Tools', icon: Terminal, path: 'Web PTY interactive SSH console' },
-    { id: 'services', title: 'Services / Servisler', group: 'Management', icon: Activity, path: 'Systemd services start, stop & restart' },
-    { id: 'backups', title: 'Backups / Yedekleme', group: 'Tools', icon: Archive, path: '1-Click backups & restore' },
-    { id: 'settings', title: 'Settings / Ayarlar', group: 'Preferences', icon: Settings, path: 'Users, SSH keys, Cron, Alerts & Logs' },
+    { id: 'dashboard', title: 'Dashboard / Genel Bakış', group: 'Main', icon: LayoutDashboard, path: 'Real-time telemetry, load & quick stats' },
+    { id: 'appstore', title: 'Apps / Uygulamalar', group: 'Main', icon: Package, path: '1-Click App Catalog & GitHub Deployer' },
+    { id: 'system', title: 'Sistem Detayları / Specs', group: 'System', icon: Cpu, path: 'Hardware topology, kernel, PCI & USB' },
+    { id: 'filemanager', title: 'Dosya Yöneticisi / Files', group: 'System', icon: FolderKanban, path: 'Visual file browser & code editor' },
+    { id: 'terminal', title: 'Web Terminal / Console', group: 'System', icon: Terminal, path: 'Interactive PTY WebSocket shell' },
+    { id: 'services', title: 'Servis Yöneticisi / Services', group: 'System', icon: Activity, path: 'Systemd daemons start, stop & restart' },
+    { id: 'network', title: 'Ağ & Portlar / Network', group: 'System', icon: Network, path: 'Open ports, network interfaces & firewall' },
+    { id: 'logs', title: 'Sistem Logları / Logs', group: 'System', icon: FileText, path: 'Journalctl & system log stream' },
+    { id: 'proxy', title: 'Ters Proxy & SSL', group: 'Tools', icon: Globe, path: 'Reverse proxy hosts & Nginx exporter' },
+    { id: 'cron', title: 'Visual Cron Jobs', group: 'Tools', icon: Clock, path: 'Scheduled cron task manager & logs' },
+    { id: 'backups', title: 'Yedekleme & Kurtarma', group: 'Tools', icon: Archive, path: 'Tarball system backups & 1-click restore' },
+    { id: 'alerts', title: 'Alarm & Bildirimler', group: 'Tools', icon: Bell, path: 'Telegram, Discord, Slack & Webhook alerts' },
+    { id: 'users', title: 'Kullanıcı Yönetimi', group: 'Security', icon: Users, path: 'Panel accounts, Linux users & SSH keys' },
+    { id: 'audit', title: 'Güvenlik Logları', group: 'Security', icon: ShieldCheck, path: 'Audit logs & login security history' },
+    { id: 'settings', title: 'Ayarlar / Settings', group: 'Security', icon: Settings, path: 'Account security, 2FA & preferences' },
   ];
 
   const filtered = actions.filter((a) =>
@@ -57,7 +71,7 @@ export function CommandPalette({ isOpen, onClose, onSelectTab }: CommandPaletteP
   );
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-start justify-center pt-24 px-4">
+    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-start justify-center pt-24 px-4 font-sans">
       <div className="w-full max-w-xl glass-panel rounded-3xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Search Header */}
         <div className="relative p-4 border-b border-slate-800 flex items-center">
@@ -66,11 +80,11 @@ export function CommandPalette({ isOpen, onClose, onSelectTab }: CommandPaletteP
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Type a section name... (e.g. Apps, Terminal, Settings)"
+            placeholder="Type to search section... (e.g. Proxy, Cron, Terminal, Users)"
             autoFocus
-            className="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none"
+            className="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none font-medium"
           />
-          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -78,7 +92,7 @@ export function CommandPalette({ isOpen, onClose, onSelectTab }: CommandPaletteP
         {/* Results List */}
         <div className="max-h-80 overflow-y-auto p-2 space-y-1">
           {filtered.length === 0 ? (
-            <div className="py-8 text-center text-xs text-slate-500">No matching commands found</div>
+            <div className="py-8 text-center text-xs text-slate-500">No matching section found</div>
           ) : (
             filtered.map((item) => {
               const Icon = item.icon;
@@ -112,7 +126,7 @@ export function CommandPalette({ isOpen, onClose, onSelectTab }: CommandPaletteP
           )}
         </div>
 
-        {/* Footer shortcuts */}
+        {/* Footer Shortcuts */}
         <div className="p-3 bg-slate-950 border-t border-slate-800/80 text-[11px] text-slate-500 flex justify-between items-center px-4 font-mono">
           <span>Navigate with <kbd className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-slate-300">Ctrl + K</kbd></span>
           <span>Press <kbd className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-slate-300">Esc</kbd> to close</span>

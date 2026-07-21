@@ -10,8 +10,15 @@ import { FileManager } from './views/FileManager';
 import { WebTerminal } from './views/WebTerminal';
 import { AppStore } from './views/AppStore';
 import { Services } from './views/Services';
-import { Settings } from './views/Settings';
+import { Network } from './views/Network';
+import { Logs } from './views/Logs';
+import { ProxyManagerView } from './views/ProxyManager';
+import { CronManagerView } from './views/CronManager';
 import { BackupManagerView } from './views/BackupManager';
+import { AlertManagerView } from './views/AlertManager';
+import { Users } from './views/Users';
+import { AuditLogsView } from './views/AuditLogs';
+import { Settings } from './views/Settings';
 
 export function App() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('yare_token'));
@@ -23,7 +30,7 @@ export function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([
-    { id: 't1', type: 'info', title: 'YARE Control Panel', message: 'Engine connected to Linux system telemetry stream.' }
+    { id: 't1', type: 'info', title: 'YARE Control Panel v2.0', message: 'Connected to Linux host telemetry stream.' }
   ]);
 
   const addToast = (type: 'success' | 'error' | 'warning' | 'info', title: string, message?: string) => {
@@ -60,7 +67,7 @@ export function App() {
   return (
     <div className="flex min-h-screen bg-[#0b0f17] text-slate-100 font-sans transition-colors selection:bg-cyan-500/20 selection:text-cyan-300">
       {/* Navigation Sidebar */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} hostname="yare-node-ubuntu-24" />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} hostname="yare-server" />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -79,7 +86,14 @@ export function App() {
           {activeTab === 'filemanager' && <FileManager />}
           {activeTab === 'terminal' && <WebTerminal />}
           {activeTab === 'services' && <Services />}
+          {activeTab === 'network' && <Network />}
+          {activeTab === 'logs' && <Logs />}
+          {activeTab === 'proxy' && <ProxyManagerView />}
+          {activeTab === 'cron' && <CronManagerView />}
           {activeTab === 'backups' && <BackupManagerView />}
+          {activeTab === 'alerts' && <AlertManagerView />}
+          {activeTab === 'users' && <Users />}
+          {activeTab === 'audit' && <AuditLogsView />}
           {activeTab === 'settings' && <Settings />}
         </main>
       </div>
