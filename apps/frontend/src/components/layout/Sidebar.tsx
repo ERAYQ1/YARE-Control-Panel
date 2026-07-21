@@ -67,34 +67,34 @@ export function Sidebar({ activeTab, setActiveTab, hostname = 'yare-server' }: S
   ];
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-slate-950 border-r border-slate-800/80 p-3 flex flex-col justify-between h-screen sticky top-0 z-30 font-sans transition-colors">
+    <aside className="w-64 flex-shrink-0 bg-sidebar-theme border-r border-theme p-3 flex flex-col justify-between h-screen sticky top-0 z-30 font-sans transition-colors">
       <div className="overflow-y-auto pr-1 space-y-4">
         {/* Brand Header */}
-        <div className="flex items-center gap-3 px-2 py-3 border-b border-slate-800/80">
+        <div className="flex items-center gap-3 px-2 py-3 border-b border-theme">
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-black text-base text-white shadow-lg shadow-cyan-500/25">
             Y
           </div>
           <div>
-            <h1 className="font-extrabold text-sm text-white tracking-tight flex items-center gap-1.5">
-              YARE PANEL <span className="text-[10px] font-bold text-cyan-400 px-1.5 py-0.2 rounded bg-cyan-500/10 border border-cyan-500/20">v2.0</span>
+            <h1 className="font-extrabold text-sm text-primary-theme tracking-tight flex items-center gap-1.5">
+              YARE PANEL <span className="text-[10px] font-bold text-cyan-500 px-1.5 py-0.2 rounded bg-cyan-500/10 border border-cyan-500/20">v2.0</span>
             </h1>
-            <p className="text-[10px] text-slate-400 font-medium">Linux Server Management</p>
+            <p className="text-[10px] text-muted-theme font-medium">Linux Server Management</p>
           </div>
         </div>
 
         {/* Server Node Banner */}
-        <div className="mx-1 rounded-xl bg-slate-900/80 border border-slate-800/80 px-3 py-2 flex items-center justify-between text-xs shadow-inner">
+        <div className="mx-1 rounded-xl bg-card-theme border border-theme px-3 py-2 flex items-center justify-between text-xs shadow-inner">
           <div className="flex items-center gap-2 truncate">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-            <span className="font-bold text-slate-200 text-[11px] truncate">{hostname}</span>
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="font-bold text-primary-theme text-[11px] truncate">{hostname}</span>
           </div>
-          <span className="text-[10px] font-mono text-cyan-400 font-bold bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-900/40 shrink-0">:8080</span>
+          <span className="text-[10px] font-mono text-cyan-500 font-bold bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20 shrink-0">:8080</span>
         </div>
 
         {/* Navigation Sections */}
         {navSections.map((sec, i) => (
           <div key={i} className="space-y-1">
-            <p className="px-2.5 mb-1.5 text-[10px] font-extrabold text-slate-500 tracking-wider uppercase">{sec.title}</p>
+            <p className="px-2.5 mb-1.5 text-[10px] font-extrabold text-muted-theme tracking-wider uppercase">{sec.title}</p>
             {sec.items.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -104,12 +104,12 @@ export function Sidebar({ activeTab, setActiveTab, hostname = 'yare-server' }: S
                   onClick={() => setActiveTab(item.id)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                     isActive
-                      ? 'bg-gradient-to-r from-cyan-600/20 to-blue-600/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-md'
-                      : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/60'
+                      ? 'bg-gradient-to-r from-cyan-600/20 to-blue-600/20 text-cyan-500 font-bold border border-cyan-500/30 shadow-md'
+                      : 'text-secondary-theme hover:text-primary-theme hover:bg-hover-theme'
                   }`}
                 >
                   <div className="flex items-center gap-3 truncate">
-                    <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
+                    <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-cyan-500' : 'text-muted-theme'}`} />
                     <span className="truncate">{item.label}</span>
                   </div>
                   {item.highlight && !isActive && (
@@ -126,11 +126,11 @@ export function Sidebar({ activeTab, setActiveTab, hostname = 'yare-server' }: S
       </div>
 
       {/* Footer Info */}
-      <div className="px-3 py-2.5 border-t border-slate-800/80 text-[11px] text-slate-500 flex items-center justify-between bg-slate-950/90 mt-2">
-        <span className="flex items-center gap-1.5 text-slate-400 font-medium">
-          <Server className="h-3.5 w-3.5 text-cyan-400" /> Host Engine
+      <div className="px-3 py-2.5 border-t border-theme text-[11px] text-muted-theme flex items-center justify-between bg-sidebar-theme mt-2">
+        <span className="flex items-center gap-1.5 text-secondary-theme font-medium">
+          <Server className="h-3.5 w-3.5 text-cyan-500" /> Host Engine
         </span>
-        <span className="font-mono text-[10px] text-slate-400">v2.0.0</span>
+        <span className="font-mono text-[10px] text-muted-theme">v2.0.0</span>
       </div>
     </aside>
   );

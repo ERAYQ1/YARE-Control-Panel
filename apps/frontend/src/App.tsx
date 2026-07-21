@@ -65,7 +65,7 @@ export function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0b0f17] text-slate-100 font-sans transition-colors selection:bg-cyan-500/20 selection:text-cyan-300">
+    <div className="flex min-h-screen bg-app-theme text-primary-theme font-sans transition-colors duration-200">
       {/* Navigation Sidebar */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} hostname="yare-server" />
 
@@ -79,7 +79,7 @@ export function App() {
           userRole={currentUser.role}
         />
 
-        <main className="flex-1 p-6 overflow-y-auto bg-gradient-to-b from-[#0b0f17] via-[#0d131f] to-[#0b0f17]">
+        <main className="flex-1 p-6 overflow-y-auto bg-app-theme transition-colors duration-200">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'appstore' && <AppStore />}
           {activeTab === 'system' && <System />}

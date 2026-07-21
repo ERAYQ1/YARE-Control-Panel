@@ -8,9 +8,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        slate: {
-          950: '#090d16',
-        },
+        'app-theme': 'var(--bg-app)',
+        'sidebar-theme': 'var(--bg-sidebar)',
+        'surface-theme': 'var(--bg-surface)',
+        'card-theme': 'var(--bg-card)',
+        'hover-theme': 'var(--bg-hover)',
+        'border-theme': 'var(--border-color)',
+        'border-subtle': 'var(--border-subtle)',
+        'primary-theme': 'var(--text-primary)',
+        'secondary-theme': 'var(--text-secondary)',
+        'muted-theme': 'var(--text-muted)',
       },
     },
   },

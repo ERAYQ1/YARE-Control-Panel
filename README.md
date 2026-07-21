@@ -10,11 +10,19 @@
 
 ---
 
-## ⚡ Quick Start (Installation)
+### ⚡ 1-Command Automated Script Installation
 
-### 🚀 1. Binary Download (GitHub Releases)
+Run this single command on any 64-bit Linux server (Ubuntu, Debian, AlmaLinux, Fedora, Arch) to download, register systemd service, and launch YARE Control Panel instantly:
 
-Download and run the pre-compiled standalone binary on any 64-bit Linux server:
+```bash
+curl -fsSL https://raw.githubusercontent.com/ERAYQ1/YARE-Control-Panel/main/install/install.sh | bash
+```
+
+---
+
+### 🚀 2. Binary Download (GitHub Releases)
+
+Download and run the pre-compiled standalone binary manually:
 
 ```bash
 wget https://github.com/ERAYQ1/YARE-Control-Panel/releases/latest/download/yare-panel-linux-amd64
