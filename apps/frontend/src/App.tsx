@@ -10,16 +10,8 @@ import { FileManager } from './views/FileManager';
 import { WebTerminal } from './views/WebTerminal';
 import { AppStore } from './views/AppStore';
 import { Services } from './views/Services';
-import { Docker } from './views/Docker';
-import { Network } from './views/Network';
-import { Logs } from './views/Logs';
-import { Users } from './views/Users';
 import { Settings } from './views/Settings';
-import { ProxyManagerView } from './views/ProxyManager';
-import { CronManagerView } from './views/CronManager';
 import { BackupManagerView } from './views/BackupManager';
-import { AlertManagerView } from './views/AlertManager';
-import { AuditLogsView } from './views/AuditLogs';
 
 export function App() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('yare_token'));
@@ -31,7 +23,7 @@ export function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([
-    { id: 't1', type: 'info', title: 'YARE Control Panel Engine', message: 'Connected to server telemetry stream.' }
+    { id: 't1', type: 'info', title: 'YARE Control Panel', message: 'Engine connected to Linux system telemetry stream.' }
   ]);
 
   const addToast = (type: 'success' | 'error' | 'warning' | 'info', title: string, message?: string) => {
@@ -86,16 +78,8 @@ export function App() {
           {activeTab === 'system' && <System />}
           {activeTab === 'filemanager' && <FileManager />}
           {activeTab === 'terminal' && <WebTerminal />}
-          {activeTab === 'docker' && <Docker />}
           {activeTab === 'services' && <Services />}
-          {activeTab === 'proxy' && <ProxyManagerView />}
-          {activeTab === 'cron' && <CronManagerView />}
           {activeTab === 'backups' && <BackupManagerView />}
-          {activeTab === 'alerts' && <AlertManagerView />}
-          {activeTab === 'network' && <Network />}
-          {activeTab === 'audit' && <AuditLogsView />}
-          {activeTab === 'logs' && <Logs />}
-          {activeTab === 'users' && <Users />}
           {activeTab === 'settings' && <Settings />}
         </main>
       </div>

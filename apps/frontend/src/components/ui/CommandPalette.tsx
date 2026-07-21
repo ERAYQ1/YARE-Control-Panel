@@ -6,11 +6,8 @@ import {
   FolderKanban,
   Terminal,
   Activity,
-  Box,
-  Network,
-  ScrollText,
-  Users,
-  Puzzle,
+  Package,
+  Archive,
   Settings,
   X,
   ArrowRight
@@ -43,17 +40,14 @@ export function CommandPalette({ isOpen, onClose, onSelectTab }: CommandPaletteP
   if (!isOpen) return null;
 
   const actions = [
-    { id: 'dashboard', title: 'Go to Dashboard', group: 'Navigation', icon: LayoutDashboard, path: 'Overview charts & metrics' },
-    { id: 'system', title: 'Inspect System Specs', group: 'Navigation', icon: Cpu, path: 'CPU, RAM, Disks, PCI/USB' },
-    { id: 'filemanager', title: 'Open File Manager', group: 'Navigation', icon: FolderKanban, path: 'Browse & edit server files' },
-    { id: 'terminal', title: 'Open Web Terminal', group: 'Tools', icon: Terminal, path: 'SSH PTY Web Console' },
-    { id: 'services', title: 'Manage Systemd Services', group: 'Management', icon: Activity, path: 'Start, stop & restart services' },
-    { id: 'docker', title: 'Manage Docker Containers', group: 'Management', icon: Box, path: 'Containers, images, volumes' },
-    { id: 'network', title: 'Inspect Network & UFW Firewall', group: 'Security', icon: Network, path: 'IPs, open ports, UFW rules' },
-    { id: 'logs', title: 'View Multi-Source Logs', group: 'Monitoring', icon: ScrollText, path: 'System, kernel & docker logs' },
-    { id: 'users', title: 'Manage Users & SSH Keys', group: 'Security', icon: Users, path: 'Linux & Panel accounts' },
-    { id: 'plugins', title: 'Explore Plugin Marketplace', group: 'Extensions', icon: Puzzle, path: 'Enable or disable modules' },
-    { id: 'settings', title: 'Open Platform Settings', group: 'Preferences', icon: Settings, path: 'Security & panel config' },
+    { id: 'dashboard', title: 'Dashboard / Genel Bakış', group: 'Main', icon: LayoutDashboard, path: '5-second server status & charts' },
+    { id: 'appstore', title: 'Apps / Uygulamalar', group: 'Management', icon: Package, path: '1-Click App Store & Docker containers' },
+    { id: 'system', title: 'System / Sistem', group: 'Hardware', icon: Cpu, path: 'CPU, RAM, Storage, Network, Processes' },
+    { id: 'filemanager', title: 'Files / Dosyalar', group: 'Tools', icon: FolderKanban, path: 'Browse, edit & manage server files' },
+    { id: 'terminal', title: 'Terminal', group: 'Tools', icon: Terminal, path: 'Web PTY interactive SSH console' },
+    { id: 'services', title: 'Services / Servisler', group: 'Management', icon: Activity, path: 'Systemd services start, stop & restart' },
+    { id: 'backups', title: 'Backups / Yedekleme', group: 'Tools', icon: Archive, path: '1-Click backups & restore' },
+    { id: 'settings', title: 'Settings / Ayarlar', group: 'Preferences', icon: Settings, path: 'Users, SSH keys, Cron, Alerts & Logs' },
   ];
 
   const filtered = actions.filter((a) =>
@@ -72,7 +66,7 @@ export function CommandPalette({ isOpen, onClose, onSelectTab }: CommandPaletteP
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Type a command or search page... (e.g. Terminal, Docker, Logs)"
+            placeholder="Type a section name... (e.g. Apps, Terminal, Settings)"
             autoFocus
             className="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none"
           />
@@ -120,7 +114,7 @@ export function CommandPalette({ isOpen, onClose, onSelectTab }: CommandPaletteP
 
         {/* Footer shortcuts */}
         <div className="p-3 bg-slate-950 border-t border-slate-800/80 text-[11px] text-slate-500 flex justify-between items-center px-4 font-mono">
-          <span>Navigate with <kbd className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-slate-300">Cmd + K</kbd></span>
+          <span>Navigate with <kbd className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-slate-300">Ctrl + K</kbd></span>
           <span>Press <kbd className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-slate-300">Esc</kbd> to close</span>
         </div>
       </div>
