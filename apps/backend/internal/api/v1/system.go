@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"yare-backend/internal/system"
+
 	"github.com/gin-gonic/gin"
 	"github.com/shirou/gopsutil/v3/mem"
 )
@@ -67,22 +68,6 @@ func getBIOSInfo() string {
 
 func getPCIDevices() []string {
 	var devices []string
-	_, err1 := os.Stat("/hostroot/usr/bin/lspci")
-	_, err2 := os.Stat("/hostroot/bin/lspci")
-	if err1 == nil || err2 == nil {
-		cmd := exec.Command("chroot", "/hostroot", "lspci")
-		if out, err := cmd.Output(); err == nil {
-			lines := strings.Split(strings.TrimSpace(string(out)), "\n")
-			for _, l := range lines {
-				if strings.TrimSpace(l) != "" {
-					devices = append(devices, strings.TrimSpace(l))
-				}
-			}
-			if len(devices) > 0 {
-				return devices
-			}
-		}
-	}
 	cmd := exec.Command("lspci")
 	if out, err := cmd.Output(); err == nil {
 		lines := strings.Split(strings.TrimSpace(string(out)), "\n")
@@ -127,22 +112,6 @@ func getPCIDevices() []string {
 
 func getUSBDevices() []string {
 	var devices []string
-	_, uErr1 := os.Stat("/hostroot/usr/bin/lsusb")
-	_, uErr2 := os.Stat("/hostroot/bin/lsusb")
-	if uErr1 == nil || uErr2 == nil {
-		cmd := exec.Command("chroot", "/hostroot", "lsusb")
-		if out, err := cmd.Output(); err == nil {
-			lines := strings.Split(strings.TrimSpace(string(out)), "\n")
-			for _, l := range lines {
-				if strings.TrimSpace(l) != "" {
-					devices = append(devices, strings.TrimSpace(l))
-				}
-			}
-			if len(devices) > 0 {
-				return devices
-			}
-		}
-	}
 	cmd := exec.Command("lsusb")
 	if out, err := cmd.Output(); err == nil {
 		lines := strings.Split(strings.TrimSpace(string(out)), "\n")
@@ -214,16 +183,32 @@ func (sc *SystemController) GetSystemDetails(c *gin.Context) {
 	bios := getBIOSInfo()
 	gpu := getGPUInfo(pciDevices)
 
-	var diskPartitions []gin.H
+	var diskList []gin.H
 	for _, drive := range metrics.Disk.Drives {
-		diskPartitions = append(diskPartitions, gin.H{
+		name := drive.MountPoint
+		if name == "/" {
+			name = "Primary Host Storage (/)"
+		}
+		diskList = append(diskList, gin.H{
+			"name":       name,
 			"device":     drive.Device,
-			"mountPoint": drive.MountPoint,
-			"fsType":     drive.FSType,
+			"model":      drive.FSType + " Partition",
+			"type":       drive.FSType,
 			"size":       drive.Total,
 			"used":       drive.Used,
 			"free":       drive.Free,
 			"percent":    drive.UsagePercent,
+		})
+	}
+	if len(diskList) == 0 {
+		diskList = append(diskList, gin.H{
+			"name":   "Primary Host Storage (/)",
+			"device": "/dev/root",
+			"model":  "Physical Disk",
+			"type":   "ext4",
+			"size":   metrics.Disk.Total,
+			"used":   metrics.Disk.Used,
+			"free":   metrics.Disk.Free,
 		})
 	}
 
@@ -244,10 +229,8 @@ func (sc *SystemController) GetSystemDetails(c *gin.Context) {
 		"gpu":           gpu,
 		"pciDevices":    pciDevices,
 		"usbDevices":    usbDevices,
-		"disks": []gin.H{
-			{"name": "Primary Host Storage", "size": metrics.Disk.Total, "type": "Physical NVMe/SSD", "used": metrics.Disk.Used},
-		},
-		"partitions": diskPartitions,
+		"disks":          diskList,
+		"partitions":     diskList,
 	}
 
 	c.JSON(http.StatusOK, info)
