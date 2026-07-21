@@ -4,6 +4,7 @@ import (
 	"embed"
 	"io/fs"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,7 +28,24 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	log.Printf("Starting YARE Panel Engine [Env: %s, Port: %s]...", cfg.Environment, cfg.Port)
+	// Port fallback logic: Try configured port (e.g. 8080) -> Fallback to 8081 -> Fatal error
+	targetPort := cfg.Port
+	ln, err := net.Listen("tcp", ":"+targetPort)
+	if err != nil {
+		if targetPort == "8080" {
+			log.Printf("[WARN] Port 8080 is already occupied. Trying fallback port 8081...")
+			targetPort = "8081"
+			ln, err = net.Listen("tcp", ":"+targetPort)
+			if err != nil {
+				log.Fatalf("[FATAL] Port 8080 and fallback port 8081 are both occupied. Unable to start YARE Panel: %v", err)
+			}
+		} else {
+			log.Fatalf("[FATAL] Unable to bind port %s: %v", targetPort, err)
+		}
+	}
+	_ = ln.Close()
+
+	log.Printf("Starting YARE Panel Engine [Env: %s, Port: %s]...", cfg.Environment, targetPort)
 
 	// Ensure parent directory for database exists
 	if dir := filepath.Dir(cfg.DBPath); dir != "." && dir != "" {
@@ -59,7 +77,7 @@ func main() {
 		c.JSON(200, gin.H{
 			"status":  "online",
 			"name":    "YARE Control Panel Engine",
-			"version": "1.0.0",
+			"version": "2.0.0",
 		})
 	})
 
@@ -80,8 +98,8 @@ func main() {
 		})
 	}
 
-	log.Printf("YARE Panel listening on http://0.0.0.0:%s", cfg.Port)
-	if err := r.Run(":" + cfg.Port); err != nil {
+	log.Printf("YARE Panel listening on http://0.0.0.0:%s", targetPort)
+	if err := r.Run(":" + targetPort); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
 }
