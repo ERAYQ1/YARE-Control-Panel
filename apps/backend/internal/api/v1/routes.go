@@ -29,6 +29,7 @@ func RegisterRoutes(r *gin.Engine, jwtSecret string) {
 	cronCtrl := NewCronController()
 	backupsCtrl := NewBackupsController()
 	alertsCtrl := NewAlertsController()
+	appStoreCtrl := NewAppStoreController()
 
 	v1 := r.Group("/api/v1")
 	{
@@ -45,6 +46,15 @@ func RegisterRoutes(r *gin.Engine, jwtSecret string) {
 		protected.Use(middleware.AuthMiddleware(jwtSecret))
 		{
 			protected.GET("/auth/me", authCtrl.Me)
+
+			// App Store & GitHub Engine
+			protected.GET("/appstore/curated", appStoreCtrl.GetCuratedApps)
+			protected.GET("/appstore/github/search", appStoreCtrl.SearchGitHubRepos)
+			protected.POST("/appstore/github/inspect", appStoreCtrl.InspectGitHubRepo)
+			protected.POST("/appstore/deploy", middleware.RoleMiddleware("admin", "operator"), appStoreCtrl.DeployApp)
+			protected.GET("/appstore/installed", appStoreCtrl.GetInstalledApps)
+			protected.POST("/appstore/installed/:id/:action", middleware.RoleMiddleware("admin", "operator"), appStoreCtrl.AppAction)
+			protected.GET("/appstore/installed/:id/logs", appStoreCtrl.GetAppLogs)
 
 			// Dashboard & System
 			protected.GET("/dashboard/stats", dashboardCtrl.GetStats)

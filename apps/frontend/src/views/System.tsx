@@ -157,9 +157,13 @@ export function System() {
             <Database className="h-4 w-4 text-indigo-400" /> PCI Express Devices (lspci)
           </h3>
           <div className="space-y-2 font-mono text-[11px] text-slate-300 max-h-48 overflow-y-auto">
-            {info.pciDevices.map((dev, i) => (
-              <div key={i} className="p-2 rounded bg-slate-950/80 border border-slate-800/80">{dev}</div>
-            ))}
+            {(info.pciDevices || []).length > 0 ? (
+              info.pciDevices.map((dev, i) => (
+                <div key={i} className="p-2 rounded bg-slate-950/80 border border-slate-800/80">{dev}</div>
+              ))
+            ) : (
+              <div className="p-3 text-slate-500 text-center italic">No PCI devices enumerated</div>
+            )}
           </div>
         </div>
 
@@ -168,9 +172,13 @@ export function System() {
             <Usb className="h-4 w-4 text-amber-400" /> Connected USB Devices (lsusb)
           </h3>
           <div className="space-y-2 font-mono text-[11px] text-slate-300 max-h-48 overflow-y-auto">
-            {info.usbDevices.map((dev, i) => (
-              <div key={i} className="p-2 rounded bg-slate-950/80 border border-slate-800/80">{dev}</div>
-            ))}
+            {(info.usbDevices || []).length > 0 ? (
+              info.usbDevices.map((dev, i) => (
+                <div key={i} className="p-2 rounded bg-slate-950/80 border border-slate-800/80">{dev}</div>
+              ))
+            ) : (
+              <div className="p-3 text-slate-500 text-center italic">No USB devices enumerated</div>
+            )}
           </div>
         </div>
       </div>

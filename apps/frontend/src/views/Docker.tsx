@@ -60,6 +60,15 @@ export function Docker() {
     }
   }, [activeTab]);
 
+  const handleContainerAction = (id: string, action: 'start' | 'stop' | 'restart' | 'delete') => {
+    api.post(`/docker/containers/${id}/${action}`)
+      .then(() => {
+        // Refresh containers list
+        api.get('/docker/containers').then(res => setContainers(res.data));
+      })
+      .catch(() => {});
+  };
+
   const containerColumns: Column<DockerContainer>[] = [
     {
       header: 'Container Name',
@@ -93,26 +102,42 @@ export function Docker() {
     {
       header: 'Ports',
       accessorKey: 'ports',
-      cell: (row) => <span className="font-mono text-[11px] text-indigo-300">{row.ports.join(', ') || 'None'}</span>,
+      cell: (row) => <span className="font-mono text-[11px] text-indigo-300">{(row.ports || []).join(', ') || 'None'}</span>,
     },
     {
       header: 'Actions',
       cell: (row) => (
         <div className="flex items-center gap-1">
           {row.state === 'running' ? (
-            <button className="p-1.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20">
+            <button
+              onClick={() => handleContainerAction(row.id, 'stop')}
+              className="p-1.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20"
+              title="Stop"
+            >
               <Square className="h-3 w-3 fill-rose-400" />
             </button>
           ) : (
-            <button className="p-1.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20">
+            <button
+              onClick={() => handleContainerAction(row.id, 'start')}
+              className="p-1.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
+              title="Start"
+            >
               <Play className="h-3 w-3 fill-emerald-400" />
             </button>
           )}
-          <button className="p-1.5 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700">
+          <button
+            onClick={() => handleContainerAction(row.id, 'restart')}
+            className="p-1.5 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700"
+            title="Restart"
+          >
             <RotateCw className="h-3 w-3" />
           </button>
-          <button className="p-1.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20">
-            <TermIcon className="h-3 w-3" />
+          <button
+            onClick={() => handleContainerAction(row.id, 'delete')}
+            className="p-1.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20"
+            title="Delete Container"
+          >
+            <Trash2 className="h-3 w-3" />
           </button>
         </div>
       ),

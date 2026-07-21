@@ -120,6 +120,19 @@ func createTables() {
 			enabled INTEGER DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		);`,
+		`CREATE TABLE IF NOT EXISTS installed_apps (
+			id TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			repo_url TEXT,
+			description TEXT,
+			category TEXT,
+			icon TEXT,
+			container_name TEXT,
+			status TEXT DEFAULT 'running',
+			port TEXT,
+			env_vars TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);`,
 	}
 
 	for _, query := range queries {

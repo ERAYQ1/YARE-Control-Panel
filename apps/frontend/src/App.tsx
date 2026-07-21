@@ -9,14 +9,11 @@ import { System } from './views/System';
 import { FileManager } from './views/FileManager';
 import { WebTerminal } from './views/WebTerminal';
 import { AppStore } from './views/AppStore';
-import { Cluster } from './views/Cluster';
-import { AICopilot } from './views/AICopilot';
 import { Services } from './views/Services';
 import { Docker } from './views/Docker';
 import { Network } from './views/Network';
 import { Logs } from './views/Logs';
 import { Users } from './views/Users';
-import { Plugins } from './views/Plugins';
 import { Settings } from './views/Settings';
 import { ProxyManagerView } from './views/ProxyManager';
 import { CronManagerView } from './views/CronManager';
@@ -69,7 +66,7 @@ export function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-app-theme text-primary-theme font-sans transition-colors selection:bg-surface-theme selection:text-primary-theme">
+    <div className="flex min-h-screen bg-[#0b0f17] text-slate-100 font-sans transition-colors selection:bg-cyan-500/20 selection:text-cyan-300">
       {/* Navigation Sidebar */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} hostname="yare-node-ubuntu-24" />
 
@@ -83,25 +80,22 @@ export function App() {
           userRole={currentUser.role}
         />
 
-        <main className="flex-1 p-5 overflow-y-auto">
+        <main className="flex-1 p-6 overflow-y-auto bg-gradient-to-b from-[#0b0f17] via-[#0d131f] to-[#0b0f17]">
           {activeTab === 'dashboard' && <Dashboard />}
+          {activeTab === 'appstore' && <AppStore />}
           {activeTab === 'system' && <System />}
           {activeTab === 'filemanager' && <FileManager />}
           {activeTab === 'terminal' && <WebTerminal />}
+          {activeTab === 'docker' && <Docker />}
+          {activeTab === 'services' && <Services />}
           {activeTab === 'proxy' && <ProxyManagerView />}
           {activeTab === 'cron' && <CronManagerView />}
           {activeTab === 'backups' && <BackupManagerView />}
           {activeTab === 'alerts' && <AlertManagerView />}
-          {activeTab === 'audit' && <AuditLogsView />}
-          {activeTab === 'appstore' && <AppStore />}
-          {activeTab === 'cluster' && <Cluster />}
-          {activeTab === 'copilot' && <AICopilot />}
-          {activeTab === 'services' && <Services />}
-          {activeTab === 'docker' && <Docker />}
           {activeTab === 'network' && <Network />}
+          {activeTab === 'audit' && <AuditLogsView />}
           {activeTab === 'logs' && <Logs />}
           {activeTab === 'users' && <Users />}
-          {activeTab === 'plugins' && <Plugins />}
           {activeTab === 'settings' && <Settings />}
         </main>
       </div>

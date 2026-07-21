@@ -252,3 +252,61 @@ export interface ApiResponse<T> {
   error?: string;
   message?: string;
 }
+
+// App Store & GitHub Types
+export interface CuratedApp {
+  id: string;
+  name: string;
+  repoUrl: string;
+  category: string;
+  description: string;
+  icon: string;
+  stars: number;
+  defaultPort: string;
+  dockerImage: string;
+  envVars: string;
+  tags: string[];
+}
+
+export interface GitHubRepoItem {
+  id: number;
+  name: string;
+  full_name: string;
+  html_url: string;
+  description: string;
+  stargazers_count: number;
+  forks_count: number;
+  language: string;
+  topics: string[];
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
+  updated_at: string;
+}
+
+export interface InstalledApp {
+  id: string;
+  name: string;
+  repoUrl: string;
+  description: string;
+  category: string;
+  icon: string;
+  containerName: string;
+  status: string;
+  port: string;
+  envVars: string;
+  createdAt: string;
+}
+
+export interface DeployAppPayload {
+  name: string;
+  repoUrl?: string;
+  category?: string;
+  description?: string;
+  icon?: string;
+  dockerImage: string;
+  port?: string;
+  envVars?: string;
+}
+
