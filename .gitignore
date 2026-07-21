@@ -16,9 +16,11 @@ bin/
 *.so
 *.dylib
 
-# Go
+# Go & Databases
 apps/backend/yare-backend
 apps/backend/yare-backend.exe
+*.db
+*.db-*
 apps/backend/*.db
 apps/backend/*.db-journal
 

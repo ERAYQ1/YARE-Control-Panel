@@ -18,6 +18,11 @@ import { Logs } from './views/Logs';
 import { Users } from './views/Users';
 import { Plugins } from './views/Plugins';
 import { Settings } from './views/Settings';
+import { ProxyManagerView } from './views/ProxyManager';
+import { CronManagerView } from './views/CronManager';
+import { BackupManagerView } from './views/BackupManager';
+import { AlertManagerView } from './views/AlertManager';
+import { AuditLogsView } from './views/AuditLogs';
 
 export function App() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('yare_token'));
@@ -29,7 +34,7 @@ export function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([
-    { id: 't1', type: 'info', title: 'YARE Control Panel', message: 'Connected to server telemetry stream.' }
+    { id: 't1', type: 'info', title: 'YARE Control Panel Engine', message: 'Connected to server telemetry stream.' }
   ]);
 
   const addToast = (type: 'success' | 'error' | 'warning' | 'info', title: string, message?: string) => {
@@ -83,6 +88,11 @@ export function App() {
           {activeTab === 'system' && <System />}
           {activeTab === 'filemanager' && <FileManager />}
           {activeTab === 'terminal' && <WebTerminal />}
+          {activeTab === 'proxy' && <ProxyManagerView />}
+          {activeTab === 'cron' && <CronManagerView />}
+          {activeTab === 'backups' && <BackupManagerView />}
+          {activeTab === 'alerts' && <AlertManagerView />}
+          {activeTab === 'audit' && <AuditLogsView />}
           {activeTab === 'appstore' && <AppStore />}
           {activeTab === 'cluster' && <Cluster />}
           {activeTab === 'copilot' && <AICopilot />}

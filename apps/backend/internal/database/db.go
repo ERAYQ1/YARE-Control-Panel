@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"log"
+	"time"
 
 	_ "modernc.org/sqlite"
 	"golang.org/x/crypto/bcrypt"
@@ -16,6 +17,11 @@ func InitDB(dbPath string) {
 	if err != nil {
 		log.Fatalf("Failed to connect to SQLite database: %v", err)
 	}
+
+	// Configure SQLite PRAGMAs for high performance & concurrency (WAL mode)
+	_, _ = DB.Exec(`PRAGMA journal_mode=WAL;`)
+	_, _ = DB.Exec(`PRAGMA synchronous=NORMAL;`)
+	_, _ = DB.Exec(`PRAGMA foreign_keys=ON;`)
 
 	createTables()
 	seedAdminUser()
@@ -61,6 +67,59 @@ func createTables() {
 			author TEXT,
 			is_enabled INTEGER DEFAULT 1
 		);`,
+		`CREATE TABLE IF NOT EXISTS proxy_hosts (
+			id TEXT PRIMARY KEY,
+			domain TEXT UNIQUE NOT NULL,
+			target_url TEXT NOT NULL,
+			ssl_enabled INTEGER DEFAULT 0,
+			ssl_auto INTEGER DEFAULT 1,
+			cert_path TEXT,
+			key_path TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);`,
+		`CREATE TABLE IF NOT EXISTS cron_jobs (
+			id TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			schedule TEXT NOT NULL,
+			command TEXT NOT NULL,
+			enabled INTEGER DEFAULT 1,
+			last_run DATETIME,
+			last_status TEXT DEFAULT 'pending',
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);`,
+		`CREATE TABLE IF NOT EXISTS backups (
+			id TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			backup_type TEXT NOT NULL,
+			target_path TEXT NOT NULL,
+			storage_type TEXT DEFAULT 'local',
+			schedule TEXT DEFAULT 'manual',
+			last_run DATETIME,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);`,
+		`CREATE TABLE IF NOT EXISTS alert_channels (
+			id TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			channel_type TEXT NOT NULL,
+			config_json TEXT NOT NULL,
+			enabled INTEGER DEFAULT 1,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);`,
+		`CREATE TABLE IF NOT EXISTS alert_rules (
+			id TEXT PRIMARY KEY,
+			metric TEXT NOT NULL,
+			condition TEXT NOT NULL,
+			threshold REAL NOT NULL,
+			channel_id TEXT NOT NULL,
+			enabled INTEGER DEFAULT 1,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);`,
+		`CREATE TABLE IF NOT EXISTS totp_secrets (
+			user_id TEXT PRIMARY KEY,
+			secret TEXT NOT NULL,
+			enabled INTEGER DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);`,
 	}
 
 	for _, query := range queries {
@@ -95,3 +154,16 @@ func seedAdminUser() {
 		log.Println("Default admin user created successfully (username: admin, password: admin123)")
 	}
 }
+
+func RecordAuditLog(username, action, ip, details string) {
+	if DB == nil {
+		return
+	}
+	id := "audit_" + time.Now().Format("20060102150405") + "_" + username
+	_, err := DB.Exec(`INSERT INTO audit_logs (id, username, action, ip_address, details) VALUES (?, ?, ?, ?, ?)`,
+		id, username, action, ip, details)
+	if err != nil {
+		log.Printf("Failed to record audit log: %v", err)
+	}
+}
+

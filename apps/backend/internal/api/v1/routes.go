@@ -24,6 +24,11 @@ func RegisterRoutes(r *gin.Engine, jwtSecret string) {
 	usersCtrl := NewUsersController()
 	pluginsCtrl := NewPluginsController()
 	settingsCtrl := NewSettingsController()
+	auditCtrl := NewAuditController()
+	proxyCtrl := NewProxyController()
+	cronCtrl := NewCronController()
+	backupsCtrl := NewBackupsController()
+	alertsCtrl := NewAlertsController()
 
 	v1 := r.Group("/api/v1")
 	{
@@ -44,6 +49,38 @@ func RegisterRoutes(r *gin.Engine, jwtSecret string) {
 			// Dashboard & System
 			protected.GET("/dashboard/stats", dashboardCtrl.GetStats)
 			protected.GET("/system/info", systemCtrl.GetSystemDetails)
+
+			// Audit Logs
+			protected.GET("/audit-logs", auditCtrl.GetAuditLogs)
+
+			// Proxy & Domain Manager
+			protected.GET("/proxy/hosts", proxyCtrl.GetProxyHosts)
+			protected.POST("/proxy/hosts", middleware.RoleMiddleware("admin", "operator"), proxyCtrl.CreateProxyHost)
+			protected.DELETE("/proxy/hosts/:id", middleware.RoleMiddleware("admin", "operator"), proxyCtrl.DeleteProxyHost)
+			protected.POST("/proxy/hosts/:id/ssl", middleware.RoleMiddleware("admin", "operator"), proxyCtrl.ToggleSSL)
+			protected.GET("/proxy/hosts/:id/export", proxyCtrl.ExportNginxConfig)
+
+			// Cron Jobs
+			protected.GET("/cron", cronCtrl.GetCronJobs)
+			protected.POST("/cron", middleware.RoleMiddleware("admin", "operator"), cronCtrl.CreateCronJob)
+			protected.DELETE("/cron/:id", middleware.RoleMiddleware("admin", "operator"), cronCtrl.DeleteCronJob)
+			protected.POST("/cron/:id/toggle", middleware.RoleMiddleware("admin", "operator"), cronCtrl.ToggleCronJob)
+			protected.POST("/cron/:id/run", middleware.RoleMiddleware("admin", "operator"), cronCtrl.RunCronJobNow)
+
+			// Backups & Disaster Recovery
+			protected.GET("/backups", backupsCtrl.GetBackups)
+			protected.POST("/backups/create", middleware.RoleMiddleware("admin", "operator"), backupsCtrl.CreateBackup)
+			protected.GET("/backups/:id/download", backupsCtrl.DownloadBackup)
+			protected.DELETE("/backups/:id", middleware.RoleMiddleware("admin"), backupsCtrl.DeleteBackup)
+
+			// Alerting & Notifications
+			protected.GET("/alerts/channels", alertsCtrl.GetChannels)
+			protected.POST("/alerts/channels", middleware.RoleMiddleware("admin"), alertsCtrl.CreateChannel)
+			protected.POST("/alerts/channels/:id/test", middleware.RoleMiddleware("admin"), alertsCtrl.TestChannel)
+			protected.DELETE("/alerts/channels/:id", middleware.RoleMiddleware("admin"), alertsCtrl.DeleteChannel)
+			protected.GET("/alerts/rules", alertsCtrl.GetRules)
+			protected.POST("/alerts/rules", middleware.RoleMiddleware("admin"), alertsCtrl.CreateRule)
+			protected.DELETE("/alerts/rules/:id", middleware.RoleMiddleware("admin"), alertsCtrl.DeleteRule)
 
 			// File Manager
 			protected.GET("/files/list", fileManagerCtrl.ListFiles)

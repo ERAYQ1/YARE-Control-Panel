@@ -8,11 +8,17 @@ export function AppStore() {
 
   const apps = [
     { id: 'postgres', name: 'PostgreSQL + pgAdmin', category: 'Databases', description: 'Advanced open-source relational database engine with web GUI.', icon: '🗄️', status: 'ready' },
-    { id: 'redis', name: 'Redis Cache', category: 'Databases', description: 'Ultra-fast in-memory key-value data structure store.', icon: '⚡', status: 'ready' },
-    { id: 'ollama', name: 'Ollama AI Engine', category: 'AI & LLM', description: 'Run Llama 3, Mistral, and local LLMs on your server.', icon: '🤖', status: 'ready' },
+    { id: 'redis', name: 'Redis Cache & KV', category: 'Databases', description: 'Ultra-fast in-memory key-value data structure store.', icon: '⚡', status: 'ready' },
+    { id: 'mariadb', name: 'MariaDB / MySQL', category: 'Databases', description: 'High-performance SQL database engine for web apps.', icon: '🐬', status: 'ready' },
+    { id: 'vaultwarden', name: 'Vaultwarden (Bitwarden)', category: 'Security', description: 'Lightweight password manager server compatible with Bitwarden apps.', icon: '🔐', status: 'ready' },
+    { id: 'minio', name: 'MinIO S3 Object Storage', category: 'Cloud Storage', description: 'High performance S3 compatible object storage suite.', icon: '🪣', status: 'ready' },
+    { id: 'grafana', name: 'Grafana & Prometheus', category: 'Monitoring', description: 'Industry standard metric dashboards and visualization suite.', icon: '📈', status: 'ready' },
+    { id: 'uptime-kuma', name: 'Uptime Kuma', category: 'Monitoring', description: 'Fancy self-hosted monitoring tool for HTTP, Ping, and TCP.', icon: '📊', status: 'ready' },
+    { id: 'npm', name: 'Nginx Proxy Manager', category: 'Networking', description: 'Docker container for managing Nginx proxy hosts with SSL.', icon: '🌐', status: 'ready' },
+    { id: 'cloudflared', name: 'Cloudflare Tunnel Agent', category: 'Networking', description: 'Expose local services securely to the internet without opening ports.', icon: '☁️', status: 'ready' },
     { id: 'n8n', name: 'n8n Workflow Automation', category: 'Automation', description: 'Fair-code workflow automation tool with 400+ integrations.', icon: '🔄', status: 'ready' },
     { id: 'nextcloud', name: 'Nextcloud Hub', category: 'Cloud Storage', description: 'Self-hosted productivity platform and file storage.', icon: '☁️', status: 'ready' },
-    { id: 'uptime-kuma', name: 'Uptime Kuma', category: 'Monitoring', description: 'Fancy self-hosted monitoring tool for HTTP, Ping, and TCP.', icon: '📊', status: 'ready' },
+    { id: 'portainer', name: 'Portainer CE', category: 'DevOps', description: 'Lightweight management UI for Docker environments.', icon: '🐳', status: 'ready' },
   ];
 
   const [proxyRules, setProxyRules] = useState([

@@ -15,7 +15,12 @@ import {
   Shield,
   Package,
   Layers,
-  Bot
+  Bot,
+  Globe,
+  Clock,
+  Archive,
+  Bell,
+  ShieldCheck
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -32,9 +37,13 @@ export function Sidebar({ activeTab, setActiveTab, hostname = 'yare-server' }: S
     { id: 'system', label: t('system'), icon: Cpu },
     { id: 'filemanager', label: t('filemanager'), icon: FolderKanban },
     { id: 'terminal', label: t('terminal'), icon: Terminal },
-    { id: 'appstore', label: 'App Catalog & Proxy', icon: Package },
+    { id: 'proxy', label: 'Domain Proxy & SSL', icon: Globe },
+    { id: 'cron', label: 'Visual Cron Jobs', icon: Clock },
+    { id: 'backups', label: 'Backup & Recovery', icon: Archive },
+    { id: 'alerts', label: 'Alerting & Channels', icon: Bell },
+    { id: 'audit', label: 'Security Audit Trail', icon: ShieldCheck },
+    { id: 'appstore', label: 'App Catalog', icon: Package },
     { id: 'cluster', label: 'Multi-Node Cluster', icon: Layers },
-    { id: 'copilot', label: 'AI Copilot & Self-Healing', icon: Bot },
     { id: 'services', label: t('services'), icon: Activity },
     { id: 'docker', label: t('docker'), icon: Box },
     { id: 'network', label: t('network'), icon: Network },

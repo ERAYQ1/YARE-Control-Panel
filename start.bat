@@ -23,13 +23,20 @@ IF %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
+SET "GO_CMD=go"
 WHERE go >nul 2>nul
 IF %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] Go is not installed or not in PATH!
-    echo Please install Go 1.22+ from https://go.dev/
-    echo TIP: Or download pre-compiled yare-panel.exe from GitHub Releases for 0-dependency launch!
-    pause
-    exit /b 1
+    IF EXIST "C:\Program Files\Go\bin\go.exe" (
+        SET "GO_CMD=C:\Program Files\Go\bin\go.exe"
+    ) ELSE IF EXIST "%USERPROFILE%\go\bin\go.exe" (
+        SET "GO_CMD=%USERPROFILE%\go\bin\go.exe"
+    ) ELSE (
+        echo [ERROR] Go is not installed or not in PATH!
+        echo Please install Go 1.22+ from https://go.dev/
+        echo TIP: Or download pre-compiled yare-panel.exe from GitHub Releases for 0-dependency launch!
+        pause
+        exit /b 1
+    )
 )
 
 IF NOT EXIST "node_modules" (

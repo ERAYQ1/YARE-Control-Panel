@@ -7,15 +7,15 @@
 [![CI/CD Pipeline](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF.svg)](https://github.com/ERAYQ1/YARE-Control-Panel/actions)
 [![i18n](https://img.shields.io/badge/i18n-TR%20%7C%20EN%20%7C%20DE-emerald.svg)](https://github.com/ERAYQ1/YARE-Control-Panel)
 
-**YARE Control Panel** is a modern, high-performance, open-source server management platform designed to manage Linux servers and local systems securely and effortlessly. Crafted with an Obsidian Black dark aesthetic inspired by Vercel and Supabase, YARE compiles into a single, self-contained Go executable with embedded React SPA assets (`embed.FS`). It deploys in seconds without requiring Node.js on your server.
+**YARE Control Panel** is a modern, high-performance, enterprise-grade open-source server management platform designed to manage Linux servers and local environments securely, effortlessly, and without overhead. Crafted with an Obsidian Black dark aesthetic inspired by Vercel and Supabase, YARE compiles into a single self-contained Go executable with embedded React SPA assets (`embed.FS`). It deploys in seconds with zero runtime dependencies.
 
 ---
 
-## ⚡ Quick Start (Installation Methods)
+## ⚡ Quick Start (Zero-Frustration Installation)
 
 Choose the installation method that best suits your setup:
 
-### 🐳 1️⃣ Docker Compose (Easiest & Recommended)
+### 🐳 1️⃣ Docker Compose (Fastest & Recommended)
 
 No Node.js, Go, or external toolchain required. If Docker is installed on your machine, launch YARE with **a single command**:
 
@@ -33,7 +33,7 @@ docker compose up -d
 
 ---
 
-### 2️⃣ Linux One-Command Installer (Curl Script)
+### 🐧 2️⃣ Linux One-Command Installer (Curl Script)
 
 Install automatically on any **Ubuntu 22+, Debian 12+, Fedora, Arch, or AlmaLinux** server. Running with root privileges configures a systemd daemon (`yare.service`) and firewall ports (`8080`). Non-root installations install locally to `~/.yare`. If Go is not present, the installer downloads Go 1.22.5 and builds from source automatically:
 
@@ -48,12 +48,12 @@ curl -fsSL https://raw.githubusercontent.com/ERAYQ1/YARE-Control-Panel/main/inst
 
 ---
 
-### 🚀 3️⃣ Zero-Dependency Portable Executable (.exe / Binary)
+### 🚀 3️⃣ Portable Single Executable (.exe / Binary)
 
 Run YARE without any development tools or installation steps:
 
 1. Download the pre-compiled binary for your OS from [GitHub Releases](https://github.com/ERAYQ1/YARE-Control-Panel/releases):
-   - **Windows**: `yare-panel-windows-amd64.exe`
+   - **Windows**: `yare-panel.exe` (or `yare-panel-windows-amd64.exe`)
    - **Linux**: `yare-panel-linux-amd64`
    - **macOS**: `yare-panel-darwin-amd64` / `yare-panel-darwin-arm64`
 2. Make it executable and run:
@@ -64,7 +64,7 @@ Run YARE without any development tools or installation steps:
    ```
    ```cmd
    :: Windows (CMD)
-   .\yare-panel-windows-amd64.exe
+   .\yare-panel.exe
    ```
 3. Open **`http://localhost:8080`** in your browser!
 
@@ -108,13 +108,28 @@ Access the panel after installation:
 - **Default Username**: `admin`
 - **Default Password**: `admin123`
 
-> 🛡️ **Security Alert**: The system flags the default `admin:admin123` credentials on first login. You must update your password in **Settings -> Account** after logging in.
+> 🛡️ **Security Alert**: The system flags default `admin:admin123` credentials on first login. Update your password in **Settings -> Account** after logging in.
+
+---
+
+## ✨ Enterprise Features & Capabilities
+
+- 🌐 **Domain Reverse Proxy & SSL**: Configure proxy hosts, SSL auto-renewal readiness, and export clean Nginx configurations with 1 click.
+- ⏰ **Visual Cron Job Manager**: Create, schedule, toggle, and trigger background system tasks with live execution status audit.
+- 📦 **Backup & Disaster Recovery**: Create automated `.tar.gz` compressed system/directory backups with 1-click browser download and deletion.
+- 🔔 **Multi-Channel Alert Engine**: Send instant alerts via Telegram, Discord, Slack, and generic Webhooks with live test notifications.
+- 🛡️ **Security Audit Trail**: Detailed, searchable activity log recording username, IP address, action, and timestamps.
+- 🐳 **1-Click Docker App Catalog**: Instantly deploy PostgreSQL, Redis, Vaultwarden, MinIO S3, Grafana, Cloudflare Tunnel, n8n, Nextcloud, and Portainer CE.
+- 🚀 **Single Standalone Binary (`embed.FS`)**: React SPA is embedded directly into the Go executable. Zero Node.js runtime required on servers!
+- ⚡ **Ultra-Low Resource Usage**: SQLite WAL mode engine consuming under 30MB RAM at idle.
+- 🎨 **Obsidian Black UX**: Modern UI designed with Tailwind CSS, Lucide icons, glassmorphism, and smooth micro-animations.
+- 🌍 **Multilingual (i18n)**: Instant dynamic language switching between English 🇬🇧, Turkish 🇹🇷, and German 🇩🇪.
 
 ---
 
 ## ⚙️ Environment Variables
 
-Customize YARE Control Panel using environment variables:
+Customize YARE Control Panel behavior:
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
@@ -125,7 +140,7 @@ Customize YARE Control Panel using environment variables:
 
 ---
 
-## 🔧 Linux Service Management & Logs
+## 🔧 Linux Service Management
 
 For Linux installations running via Systemd:
 
@@ -140,46 +155,6 @@ systemctl stop yare.service
 # View live system logs
 journalctl -u yare.service -f --no-pager
 ```
-
----
-
-## 🛠️ Developer Commands Reference
-
-| Command | Description |
-| :--- | :--- |
-| `npm run setup` | Installs root monorepo and frontend dependencies |
-| `npm run dev` | Runs Vite frontend (5173) and Go backend (8080) concurrently |
-| `npm run build` | Compiles React SPA, embeds assets into Go backend, and builds binary |
-| `npm run build:win` | Compiles standalone `yare-panel.exe` for Windows |
-| `npm run docker:up` | Starts containers via Docker Compose |
-| `npm run docker:down` | Stops Docker Compose containers |
-| `make build` | Runs full production build pipeline via Makefile |
-| `make clean` | Removes build artifacts and temporary files |
-
----
-
-## 📡 API & WebSockets Reference
-
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/health` | `GET` | Server health check endpoint |
-| `/api/v1/auth/login` | `POST` | User authentication (Rate limited: max 5 req/min) |
-| `/api/v1/auth/refresh` | `POST` | Refresh access token using refresh token |
-| `/api/v1/auth/me` | `GET` | Authenticated user profile details |
-| `/api/v1/ws/metrics` | `WS` | Realtime CPU/RAM/Disk/Network telemetry WebSocket stream |
-| `/api/v1/ws/terminal` | `WS` | Web-based interactive terminal WebSocket stream |
-
----
-
-## ✨ Key Features
-
-- 🚀 **Single Self-Contained Binary (`embed.FS`)**: React SPA is embedded directly into the Go executable. Zero Node.js runtime required on servers!
-- ⚡ **Ultra-Low Memory Footprint**: SQLite database engine consuming under 30MB RAM at idle.
-- 🎨 **Obsidian Black Design System**: Premium dark theme inspired by Vercel & Supabase with smooth micro-animations.
-- 📦 **1-Click Docker App Catalog**: Deploy & manage PostgreSQL, Redis, Ollama AI, n8n, Nextcloud, and more instantly.
-- 🤖 **AI Copilot & Smart Troubleshooting**: Natural language server telemetry analysis and command generation.
-- 🌍 **Multilingual (i18n)**: Seamless dynamic language switching between English 🇬🇧, Turkish 🇹🇷, and German 🇩🇪.
-- ⌨️ **Command Palette (`⌘K` / `Ctrl+K`)**: Instant navigation and global shortcuts across all modules.
 
 ---
 

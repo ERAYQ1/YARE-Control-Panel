@@ -13,12 +13,19 @@ IF %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
+SET "GO_CMD=go"
 WHERE go >nul 2>nul
 IF %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] Go is not installed or not in PATH!
-    echo Please install Go 1.22+ from https://go.dev/
-    pause
-    exit /b 1
+    IF EXIST "C:\Program Files\Go\bin\go.exe" (
+        SET "GO_CMD=C:\Program Files\Go\bin\go.exe"
+    ) ELSE IF EXIST "%USERPROFILE%\go\bin\go.exe" (
+        SET "GO_CMD=%USERPROFILE%\go\bin\go.exe"
+    ) ELSE (
+        echo [ERROR] Go is not installed or not in PATH!
+        echo Please install Go 1.22+ from https://go.dev/
+        pause
+        exit /b 1
+    )
 )
 
 echo [1/3] Installing monorepo dependencies...
@@ -35,7 +42,7 @@ cd apps\backend
 set CGO_ENABLED=0
 set GOOS=windows
 set GOARCH=amd64
-go build -ldflags="-s -w" -o ..\..\yare-panel.exe main.go
+"%GO_CMD%" build -ldflags="-s -w" -o ..\..\yare-panel.exe main.go
 cd ..\..
 
 echo.
