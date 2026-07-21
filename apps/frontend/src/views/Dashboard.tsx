@@ -34,10 +34,10 @@ export function Dashboard() {
           ...prev.slice(-19),
           {
             time: timeStr,
-            cpu: res.data.cpu.usagePercent,
-            ram: res.data.memory.usagePercent,
-            rx: (res.data.network.rxBytesSec / (1024 * 1024)).toFixed(2),
-            tx: (res.data.network.txBytesSec / (1024 * 1024)).toFixed(2),
+            cpu: res.data?.cpu?.usagePercent ?? 0,
+            ram: res.data?.memory?.usagePercent ?? 0,
+            rx: ((res.data?.network?.rxBytesSec ?? 0) / (1024 * 1024)).toFixed(2),
+            tx: ((res.data?.network?.txBytesSec ?? 0) / (1024 * 1024)).toFixed(2),
           },
         ]);
       })
@@ -90,7 +90,7 @@ export function Dashboard() {
                 <Sparkles className="h-3.5 w-3.5" /> Standalone Telemetry Active
               </span>
               <span className="text-xs font-mono text-muted-theme">
-                Host: <strong className="text-primary-theme">{metrics.hostname}</strong> ({metrics.os})
+                Host: <strong className="text-primary-theme">{metrics?.hostname ?? 'yare-server'}</strong> ({metrics?.os ?? 'Linux'})
               </span>
             </div>
 
@@ -171,11 +171,11 @@ export function Dashboard() {
             <span className="font-bold text-secondary-theme">CPU Usage</span>
             <Cpu className="h-4 w-4 text-cyan-500" />
           </div>
-          <div className="text-2xl font-black text-primary-theme">{metrics.cpu.usagePercent.toFixed(1)}%</div>
+          <div className="text-2xl font-black text-primary-theme">{(metrics?.cpu?.usagePercent ?? 0).toFixed(1)}%</div>
           <div className="w-full bg-card-theme rounded-full h-2 overflow-hidden border border-theme">
-            <div className="bg-cyan-500 h-full rounded-full transition-all duration-500" style={{ width: `${metrics.cpu.usagePercent}%` }} />
+            <div className="bg-cyan-500 h-full rounded-full transition-all duration-500" style={{ width: `${metrics?.cpu?.usagePercent ?? 0}%` }} />
           </div>
-          <p className="text-[10px] text-muted-theme font-mono">Cores: {metrics.cpu.cores} | Load: {metrics.cpu.loadAverage?.[0] || '0.00'}</p>
+          <p className="text-[10px] text-muted-theme font-mono">Cores: {metrics?.cpu?.cores ?? 1} | Load: {metrics?.cpu?.loadAverage?.[0] || '0.00'}</p>
         </div>
 
         {/* RAM Card */}
@@ -184,11 +184,11 @@ export function Dashboard() {
             <span className="font-bold text-secondary-theme">Memory (RAM)</span>
             <Activity className="h-4 w-4 text-purple-500" />
           </div>
-          <div className="text-2xl font-black text-primary-theme">{metrics.memory.usagePercent.toFixed(1)}%</div>
+          <div className="text-2xl font-black text-primary-theme">{(metrics?.memory?.usagePercent ?? 0).toFixed(1)}%</div>
           <div className="w-full bg-card-theme rounded-full h-2 overflow-hidden border border-theme">
-            <div className="bg-purple-500 h-full rounded-full transition-all duration-500" style={{ width: `${metrics.memory.usagePercent}%` }} />
+            <div className="bg-purple-500 h-full rounded-full transition-all duration-500" style={{ width: `${metrics?.memory?.usagePercent ?? 0}%` }} />
           </div>
-          <p className="text-[10px] text-muted-theme font-mono">{formatBytes(metrics.memory.used, 1)} / {formatBytes(metrics.memory.total, 1)}</p>
+          <p className="text-[10px] text-muted-theme font-mono">{formatBytes(metrics?.memory?.used ?? 0, 1)} / {formatBytes(metrics?.memory?.total ?? 0, 1)}</p>
         </div>
 
         {/* Storage Card */}
@@ -197,11 +197,11 @@ export function Dashboard() {
             <span className="font-bold text-secondary-theme">Disk Storage (/)</span>
             <HardDrive className="h-4 w-4 text-emerald-500" />
           </div>
-          <div className="text-2xl font-black text-primary-theme">{metrics.disk.usagePercent.toFixed(1)}%</div>
+          <div className="text-2xl font-black text-primary-theme">{(metrics?.disk?.usagePercent ?? 0).toFixed(1)}%</div>
           <div className="w-full bg-card-theme rounded-full h-2 overflow-hidden border border-theme">
-            <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${metrics.disk.usagePercent}%` }} />
+            <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${metrics?.disk?.usagePercent ?? 0}%` }} />
           </div>
-          <p className="text-[10px] text-muted-theme font-mono">{formatBytes(metrics.disk.used, 1)} / {formatBytes(metrics.disk.total, 1)}</p>
+          <p className="text-[10px] text-muted-theme font-mono">{formatBytes(metrics?.disk?.used ?? 0, 1)} / {formatBytes(metrics?.disk?.total ?? 0, 1)}</p>
         </div>
 
         {/* Network Throughput Card */}
@@ -211,10 +211,10 @@ export function Dashboard() {
             <Network className="h-4 w-4 text-blue-500" />
           </div>
           <div className="text-2xl font-black text-primary-theme font-mono text-xs space-y-0.5">
-            <div className="text-emerald-500 flex items-center gap-1">↓ {(metrics.network.rxBytesSec / 1024).toFixed(1)} KB/s</div>
-            <div className="text-blue-500 flex items-center gap-1">↑ {(metrics.network.txBytesSec / 1024).toFixed(1)} KB/s</div>
+            <div className="text-emerald-500 flex items-center gap-1">↓ {(((metrics?.network?.rxBytesSec ?? 0)) / 1024).toFixed(1)} KB/s</div>
+            <div className="text-blue-500 flex items-center gap-1">↑ {(((metrics?.network?.txBytesSec ?? 0)) / 1024).toFixed(1)} KB/s</div>
           </div>
-          <p className="text-[10px] text-muted-theme font-mono">Uptime: {Math.floor(metrics.uptime / 3600)}h {Math.floor((metrics.uptime % 3600) / 60)}m</p>
+          <p className="text-[10px] text-muted-theme font-mono">Uptime: {Math.floor((metrics?.uptime ?? 0) / 3600)}h {Math.floor(((metrics?.uptime ?? 0) % 3600) / 60)}m</p>
         </div>
       </div>
 
@@ -264,7 +264,7 @@ export function Dashboard() {
             <Layers className="h-4 w-4 text-cyan-500" /> Top Resource-Consuming Processes
           </h3>
           <span className="text-[11px] font-mono text-muted-theme font-bold bg-card-theme px-2.5 py-1 rounded-lg border border-theme">
-            Total Procs: {metrics.processes?.total || 0}
+            Total Procs: {metrics?.processes?.total ?? 0}
           </span>
         </div>
 
@@ -281,7 +281,7 @@ export function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-theme font-mono">
-              {(metrics.processes?.topCpu || []).map((p, idx) => (
+              {(metrics?.processes?.topCpu || []).map((p, idx) => (
                 <tr key={idx} className="hover:bg-hover-theme transition-colors">
                   <td className="py-2.5 px-3 font-bold text-cyan-500">{p.pid}</td>
                   <td className="py-2.5 px-3 text-primary-theme font-sans font-medium">{p.name}</td>
