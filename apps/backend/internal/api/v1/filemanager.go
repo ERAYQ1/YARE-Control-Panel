@@ -32,23 +32,58 @@ type FileItem struct {
 	Extension   string `json:"extension"`
 }
 
-func sanitizePath(inputPath string) string {
-	clean := filepath.Clean(inputPath)
-	if clean == "" {
+func hasHostRoot() bool {
+	info, err := os.Stat("/hostroot")
+	return err == nil && info.IsDir()
+}
+
+func toRealPath(clientPath string) string {
+	clean := filepath.Clean(clientPath)
+	if !hasHostRoot() {
+		if clean == "" || clean == "." {
+			return "/"
+		}
+		return clean
+	}
+
+	if strings.HasPrefix(clean, "/hostroot") {
+		return clean
+	}
+
+	if clean == "/" || clean == "." || clean == "" {
+		return "/hostroot"
+	}
+	return filepath.Join("/hostroot", clean)
+}
+
+func toClientPath(realPath string) string {
+	clean := filepath.Clean(realPath)
+	if !hasHostRoot() {
+		return clean
+	}
+	if clean == "/hostroot" {
 		return "/"
+	}
+	if strings.HasPrefix(clean, "/hostroot") {
+		client := strings.TrimPrefix(clean, "/hostroot")
+		if client == "" {
+			return "/"
+		}
+		return client
 	}
 	return clean
 }
 
 func (fm *FileManagerController) ListFiles(c *gin.Context) {
 	reqPath := c.DefaultQuery("path", "/")
-	reqPath = sanitizePath(reqPath)
+	realPath := toRealPath(reqPath)
+	clientPath := toClientPath(realPath)
 
-	entries, err := os.ReadDir(reqPath)
+	entries, err := os.ReadDir(realPath)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
-			"error":       fmt.Sprintf("Unable to access directory '%s': %v", reqPath, err),
-			"currentPath": reqPath,
+			"error":       fmt.Sprintf("Unable to access directory '%s': %v", clientPath, err),
+			"currentPath": clientPath,
 			"items":       []FileItem{},
 		})
 		return
@@ -60,9 +95,10 @@ func (fm *FileManagerController) ListFiles(c *gin.Context) {
 		if err != nil {
 			continue
 		}
+		entryRealPath := filepath.Join(realPath, entry.Name())
 		items = append(items, FileItem{
 			Name:        entry.Name(),
-			Path:        filepath.Join(reqPath, entry.Name()),
+			Path:        toClientPath(entryRealPath),
 			IsDir:       entry.IsDir(),
 			Size:        info.Size(),
 			Permissions: info.Mode().String(),
@@ -75,19 +111,20 @@ func (fm *FileManagerController) ListFiles(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"currentPath": reqPath,
+		"currentPath": clientPath,
 		"items":       items,
 	})
 }
 
 func (fm *FileManagerController) ReadFileContent(c *gin.Context) {
-	path := sanitizePath(c.Query("path"))
-	if path == "" {
+	clientPath := c.Query("path")
+	if clientPath == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Path parameter required"})
 		return
 	}
+	realPath := toRealPath(clientPath)
 
-	info, err := os.Stat(path)
+	info, err := os.Stat(realPath)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("File not found: %v", err)})
 		return
@@ -103,13 +140,13 @@ func (fm *FileManagerController) ReadFileContent(c *gin.Context) {
 		return
 	}
 
-	content, err := os.ReadFile(path)
+	content, err := os.ReadFile(realPath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to read file content: %v", err)})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"path": path, "content": string(content)})
+	c.JSON(http.StatusOK, gin.H{"path": toClientPath(realPath), "content": string(content)})
 }
 
 func (fm *FileManagerController) SaveFileContent(c *gin.Context) {
@@ -122,14 +159,14 @@ func (fm *FileManagerController) SaveFileContent(c *gin.Context) {
 		return
 	}
 
-	cleanPath := sanitizePath(req.Path)
-	err := os.WriteFile(cleanPath, []byte(req.Content), 0644)
+	realPath := toRealPath(req.Path)
+	err := os.WriteFile(realPath, []byte(req.Content), 0644)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to save file content: %v", err)})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "File saved successfully", "path": cleanPath})
+	c.JSON(http.StatusOK, gin.H{"message": "File saved successfully", "path": toClientPath(realPath)})
 }
 
 func (fm *FileManagerController) CreateItem(c *gin.Context) {
@@ -142,40 +179,46 @@ func (fm *FileManagerController) CreateItem(c *gin.Context) {
 		return
 	}
 
-	cleanPath := sanitizePath(req.Path)
+	realPath := toRealPath(req.Path)
 	if req.IsDir {
-		err := os.MkdirAll(cleanPath, 0755)
+		err := os.MkdirAll(realPath, 0755)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to create directory: %v", err)})
 			return
 		}
 	} else {
-		parentDir := filepath.Dir(cleanPath)
+		parentDir := filepath.Dir(realPath)
 		_ = os.MkdirAll(parentDir, 0755)
-		err := os.WriteFile(cleanPath, []byte(""), 0644)
+		err := os.WriteFile(realPath, []byte(""), 0644)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to create file: %v", err)})
 			return
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Item created successfully", "path": cleanPath})
+	c.JSON(http.StatusOK, gin.H{"message": "Item created successfully", "path": toClientPath(realPath)})
 }
 
 func (fm *FileManagerController) DeleteItem(c *gin.Context) {
-	path := sanitizePath(c.Query("path"))
-	if path == "" || path == "/" {
+	clientPath := c.Query("path")
+	if clientPath == "" || clientPath == "/" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot delete root directory"})
 		return
 	}
 
-	err := os.RemoveAll(path)
+	realPath := toRealPath(clientPath)
+	if realPath == "/hostroot" || realPath == "/" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot delete root directory"})
+		return
+	}
+
+	err := os.RemoveAll(realPath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to delete item: %v", err)})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Item deleted successfully", "path": path})
+	c.JSON(http.StatusOK, gin.H{"message": "Item deleted successfully", "path": clientPath})
 }
 
 func (fm *FileManagerController) ChmodItem(c *gin.Context) {
@@ -188,27 +231,28 @@ func (fm *FileManagerController) ChmodItem(c *gin.Context) {
 		return
 	}
 
-	cleanPath := sanitizePath(req.Path)
+	realPath := toRealPath(req.Path)
 	parsedMode, err := strconv.ParseUint(req.Mode, 8, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file permissions octal format (e.g. 755)"})
 		return
 	}
 
-	err = os.Chmod(cleanPath, os.FileMode(parsedMode))
+	err = os.Chmod(realPath, os.FileMode(parsedMode))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to update permissions: %v", err)})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Permissions updated successfully", "path": cleanPath})
+	c.JSON(http.StatusOK, gin.H{"message": "Permissions updated successfully", "path": toClientPath(realPath)})
 }
 
 func (fm *FileManagerController) UploadFile(c *gin.Context) {
-	targetDir := sanitizePath(c.PostForm("targetDir"))
+	targetDir := c.PostForm("targetDir")
 	if targetDir == "" {
-		targetDir = "."
+		targetDir = "/"
 	}
+	realTargetDir := toRealPath(targetDir)
 
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -216,13 +260,13 @@ func (fm *FileManagerController) UploadFile(c *gin.Context) {
 		return
 	}
 
-	destPath := filepath.Join(targetDir, filepath.Base(file.Filename))
-	if err := c.SaveUploadedFile(file, destPath); err != nil {
+	destRealPath := filepath.Join(realTargetDir, filepath.Base(file.Filename))
+	if err := c.SaveUploadedFile(file, destRealPath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to save uploaded file: %v", err)})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully", "path": destPath})
+	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully", "path": toClientPath(destRealPath)})
 }
 
 func (fm *FileManagerController) CompressZip(c *gin.Context) {
@@ -235,10 +279,10 @@ func (fm *FileManagerController) CompressZip(c *gin.Context) {
 		return
 	}
 
-	cleanSource := sanitizePath(req.SourcePath)
-	cleanTarget := sanitizePath(req.TargetPath)
+	realSource := toRealPath(req.SourcePath)
+	realTarget := toRealPath(req.TargetPath)
 
-	zipFile, err := os.Create(cleanTarget)
+	zipFile, err := os.Create(realTarget)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to create target archive file: %v", err)})
 		return
@@ -248,7 +292,7 @@ func (fm *FileManagerController) CompressZip(c *gin.Context) {
 	archive := zip.NewWriter(zipFile)
 	defer archive.Close()
 
-	err = filepath.Walk(cleanSource, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(realSource, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return nil
 		}
@@ -256,7 +300,7 @@ func (fm *FileManagerController) CompressZip(c *gin.Context) {
 		if err != nil {
 			return nil
 		}
-		header.Name = strings.TrimPrefix(path, filepath.Dir(cleanSource)+string(filepath.Separator))
+		header.Name = strings.TrimPrefix(path, filepath.Dir(realSource)+string(filepath.Separator))
 		header.Method = zip.Deflate
 		writer, err := archive.CreateHeader(header)
 		if err != nil {
@@ -276,5 +320,5 @@ func (fm *FileManagerController) CompressZip(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Archive created successfully", "path": cleanTarget})
+	c.JSON(http.StatusOK, gin.H{"message": "Archive created successfully", "path": toClientPath(realTarget)})
 }

@@ -82,9 +82,10 @@ export function AppStore() {
     setLoadingCurated(true);
     try {
       const res = await api.get('/appstore/curated');
-      setCuratedApps(res.data);
+      setCuratedApps(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       showToast('Failed to load curated apps catalog', 'error');
+      setCuratedApps([]);
     } finally {
       setLoadingCurated(false);
     }
@@ -94,9 +95,9 @@ export function AppStore() {
     setLoadingInstalled(true);
     try {
       const res = await api.get('/appstore/installed');
-      setInstalledApps(res.data);
+      setInstalledApps(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      // quiet fallback
+      setInstalledApps([]);
     } finally {
       setLoadingInstalled(false);
     }
@@ -204,7 +205,10 @@ export function AppStore() {
 
   const categories = ['All', 'Monitoring', 'Databases', 'Networking', 'Security', 'Storage', 'Automation', 'Search'];
 
-  const filteredCurated = curatedApps.filter(
+  const safeCuratedApps = Array.isArray(curatedApps) ? curatedApps : [];
+  const safeInstalledApps = Array.isArray(installedApps) ? installedApps : [];
+
+  const filteredCurated = safeCuratedApps.filter(
     app => selectedCategory === 'All' || app.category.toLowerCase() === selectedCategory.toLowerCase()
   );
 
@@ -287,9 +291,9 @@ export function AppStore() {
             }`}
           >
             <Layers className="h-3.5 w-3.5" /> Installed Apps
-            {installedApps.length > 0 && (
+            {safeInstalledApps.length > 0 && (
               <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-500/20 text-emerald-400 font-extrabold border border-emerald-500/30">
-                {installedApps.length}
+                {safeInstalledApps.length}
               </span>
             )}
           </button>

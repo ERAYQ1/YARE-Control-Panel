@@ -94,6 +94,7 @@ export interface SystemDetailedInfo {
     size: number;
     type: string;
     model: string;
+    used?: number;
   }[];
   partitions: {
     device: string;

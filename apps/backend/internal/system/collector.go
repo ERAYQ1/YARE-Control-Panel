@@ -1,9 +1,11 @@
 package system
 
 import (
+	"bufio"
 	"math"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/cpu"
@@ -44,25 +46,25 @@ type NetworkInterfaceInfo struct {
 }
 
 type SystemMetrics struct {
-	Timestamp     int64   `json:"timestamp"`
-	Hostname      string  `json:"hostname"`
-	OS            string  `json:"os"`
-	Platform      string  `json:"platform"`
-	KernelVersion string  `json:"kernelVersion"`
-	Uptime        uint64  `json:"uptime"`
-	CPU           CPUSpec `json:"cpu"`
-	Memory        MemSpec `json:"memory"`
-	Disk          DiskSpec`json:"disk"`
-	Network       NetSpec `json:"network"`
-	Processes     ProcSpec`json:"processes"`
+	Timestamp     int64          `json:"timestamp"`
+	Hostname      string         `json:"hostname"`
+	OS            string         `json:"os"`
+	Platform      string         `json:"platform"`
+	KernelVersion string         `json:"kernelVersion"`
+	Uptime        uint64         `json:"uptime"`
+	CPU           CPUSpec        `json:"cpu"`
+	Memory        MemSpec        `json:"memory"`
+	Disk          DiskSpec       `json:"disk"`
+	Network       NetSpec        `json:"network"`
+	Processes     ProcSpec       `json:"processes"`
 	DockerSummary *DockerSummary `json:"dockerSummary,omitempty"`
 }
 
 type CPUSpec struct {
-	Model        string    `json:"model"`
-	Cores        int       `json:"cores"`
-	UsagePercent float64   `json:"usagePercent"`
-	Temperature  float64   `json:"temperature,omitempty"`
+	Model        string     `json:"model"`
+	Cores        int        `json:"cores"`
+	UsagePercent float64    `json:"usagePercent"`
+	Temperature  float64    `json:"temperature,omitempty"`
 	LoadAverage  [3]float64 `json:"loadAverage"`
 }
 
@@ -109,20 +111,107 @@ var lastRx uint64
 var lastTx uint64
 var lastSampleTime time.Time
 
-func CollectMetrics() *SystemMetrics {
-	hostname, _ := os.Hostname()
-	if hostname == "" {
-		hostname = "yare-server"
+func init() {
+	// Configure gopsutil to inspect host proc, sys, and etc mounts if present
+	if _, err := os.Stat("/host/proc"); err == nil {
+		_ = os.Setenv("HOST_PROC", "/host/proc")
 	}
-	hostInfo, _ := host.Info()
+	if _, err := os.Stat("/host/sys"); err == nil {
+		_ = os.Setenv("HOST_SYS", "/host/sys")
+	}
+	if _, err := os.Stat("/host/etc"); err == nil {
+		_ = os.Setenv("HOST_ETC", "/host/etc")
+	}
+}
 
-	osName := runtime.GOOS
+func getHostHostname() string {
+	if envHost := os.Getenv("HOST_HOSTNAME"); envHost != "" {
+		return strings.TrimSpace(envHost)
+	}
+	paths := []string{"/host/etc/hostname", "/hostroot/etc/hostname", "/etc/hostname"}
+	for _, p := range paths {
+		if content, err := os.ReadFile(p); err == nil {
+			trimmed := strings.TrimSpace(string(content))
+			if trimmed != "" {
+				return trimmed
+			}
+		}
+	}
+	h, _ := os.Hostname()
+	if h != "" {
+		return h
+	}
+	return "yare-server"
+}
+
+func getHostOS() string {
+	paths := []string{"/host/etc/os-release", "/hostroot/etc/os-release", "/etc/os-release"}
+	for _, p := range paths {
+		if file, err := os.Open(p); err == nil {
+			defer file.Close()
+			scanner := bufio.NewScanner(file)
+			var prettyName, name, version string
+			for scanner.Scan() {
+				line := strings.TrimSpace(scanner.Text())
+				if strings.HasPrefix(line, "PRETTY_NAME=") {
+					prettyName = strings.Trim(strings.TrimPrefix(line, "PRETTY_NAME="), `"`)
+				} else if strings.HasPrefix(line, "NAME=") {
+					name = strings.Trim(strings.TrimPrefix(line, "NAME="), `"`)
+				} else if strings.HasPrefix(line, "VERSION_ID=") || strings.HasPrefix(line, "VERSION=") {
+					version = strings.Trim(strings.Trim(strings.TrimPrefix(line, "VERSION_ID="), "VERSION="), `"`)
+				}
+			}
+			if prettyName != "" {
+				return prettyName
+			}
+			if name != "" {
+				if version != "" {
+					return name + " " + version
+				}
+				return name
+			}
+		}
+	}
+	hostInfo, err := host.Info()
+	if err == nil && hostInfo != nil && hostInfo.Platform != "" {
+		return hostInfo.Platform + " " + hostInfo.PlatformVersion
+	}
+	return runtime.GOOS
+}
+
+func getCPUModel() (string, int) {
+	cores := runtime.NumCPU()
+	cpuInfo, err := cpu.Info()
+	if err == nil && len(cpuInfo) > 0 && cpuInfo[0].ModelName != "" {
+		return cpuInfo[0].ModelName, cores
+	}
+	paths := []string{"/host/proc/cpuinfo", "/proc/cpuinfo"}
+	for _, p := range paths {
+		if file, err := os.Open(p); err == nil {
+			defer file.Close()
+			scanner := bufio.NewScanner(file)
+			for scanner.Scan() {
+				line := scanner.Text()
+				if strings.HasPrefix(line, "model name") {
+					parts := strings.Split(line, ":")
+					if len(parts) > 1 {
+						return strings.TrimSpace(parts[1]), cores
+					}
+				}
+			}
+		}
+	}
+	return "Generic CPU Processor", cores
+}
+
+func CollectMetrics() *SystemMetrics {
+	hostname := getHostHostname()
+	osName := getHostOS()
+
+	hostInfo, _ := host.Info()
 	var kernelVersion string
 	var uptime uint64
 	if hostInfo != nil {
-		if hostInfo.Platform != "" {
-			osName = hostInfo.Platform + " " + hostInfo.PlatformVersion
-		}
 		kernelVersion = hostInfo.KernelVersion
 		uptime = hostInfo.Uptime
 	}
@@ -133,12 +222,7 @@ func CollectMetrics() *SystemMetrics {
 	if len(cpuPercents) > 0 {
 		cpuUsage = cpuPercents[0]
 	}
-	cpuInfo, _ := cpu.Info()
-	cpuModel := "Generic CPU"
-	cores := runtime.NumCPU()
-	if len(cpuInfo) > 0 && cpuInfo[0].ModelName != "" {
-		cpuModel = cpuInfo[0].ModelName
-	}
+	cpuModel, cores := getCPUModel()
 
 	// Memory Stats
 	vMem, err := mem.VirtualMemory()
@@ -160,26 +244,63 @@ func CollectMetrics() *SystemMetrics {
 		swapPercent = swapMem.UsedPercent
 	}
 
-	// Disk Stats
-	partitions, _ := disk.Partitions(false)
-	var drives []MountedDrive
+	// Disk Stats: Filter host root storage specifically to avoid overlay duplication
 	var diskTotal, diskUsed, diskFree uint64
+	var drives []MountedDrive
+
+	hostRootTarget := "/"
+	if _, err := os.Stat("/hostroot"); err == nil {
+		hostRootTarget = "/hostroot"
+	}
+
+	rootUsage, err := disk.Usage(hostRootTarget)
+	if err == nil && rootUsage != nil {
+		diskTotal = rootUsage.Total
+		diskUsed = rootUsage.Used
+		diskFree = rootUsage.Free
+		drives = append(drives, MountedDrive{
+			Device:       rootUsage.Path,
+			MountPoint:   "/",
+			FSType:       rootUsage.Fstype,
+			Total:        rootUsage.Total,
+			Used:         rootUsage.Used,
+			Free:         rootUsage.Free,
+			UsagePercent: math.Round(rootUsage.UsedPercent*10) / 10,
+		})
+	}
+
+	// Scan extra physical non-overlay partitions
+	partitions, _ := disk.Partitions(false)
+	ignoredFS := map[string]bool{
+		"overlay": true, "tmpfs": true, "devtmpfs": true, "squashfs": true,
+		"proc": true, "sysfs": true, "cgroup": true, "nsfs": true, "devpts": true,
+	}
 
 	for _, p := range partitions {
+		if ignoredFS[p.Fstype] || strings.Contains(p.Mountpoint, "/docker/") || strings.Contains(p.Mountpoint, "/containers/") {
+			continue
+		}
+		if p.Mountpoint == "/" || p.Mountpoint == "/hostroot" {
+			continue
+		}
 		usage, err := disk.Usage(p.Mountpoint)
-		if err == nil && usage != nil {
+		if err == nil && usage != nil && usage.Total > 0 {
+			displayMount := p.Mountpoint
+			if strings.HasPrefix(displayMount, "/hostroot") {
+				displayMount = strings.TrimPrefix(displayMount, "/hostroot")
+				if displayMount == "" {
+					displayMount = "/"
+				}
+			}
 			drives = append(drives, MountedDrive{
 				Device:       p.Device,
-				MountPoint:   p.Mountpoint,
+				MountPoint:   displayMount,
 				FSType:       p.Fstype,
 				Total:        usage.Total,
 				Used:         usage.Used,
 				Free:         usage.Free,
-				UsagePercent: usage.UsedPercent,
+				UsagePercent: math.Round(usage.UsedPercent*10) / 10,
 			})
-			diskTotal += usage.Total
-			diskUsed += usage.Used
-			diskFree += usage.Free
 		}
 	}
 
@@ -316,4 +437,3 @@ func CollectMetrics() *SystemMetrics {
 		},
 	}
 }
-
