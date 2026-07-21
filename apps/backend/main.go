@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	v1 "yare-backend/internal/api/v1"
@@ -28,8 +29,10 @@ func main() {
 
 	log.Printf("Starting YARE Panel Engine [Env: %s, Port: %s]...", cfg.Environment, cfg.Port)
 
-	// Ensure database directory exists
-	_ = os.MkdirAll("/opt/yare", 0755)
+	// Ensure parent directory for database exists
+	if dir := filepath.Dir(cfg.DBPath); dir != "." && dir != "" {
+		_ = os.MkdirAll(dir, 0755)
+	}
 
 	// Initialize SQLite Database
 	database.InitDB(cfg.DBPath)

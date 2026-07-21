@@ -2,17 +2,18 @@ package config
 
 import (
 	"os"
+	"runtime"
 
 	"github.com/google/uuid"
 )
 
 type Config struct {
-	Port         string
-	JWTSecret    string
-	DBPath       string
-	Environment  string
-	IsLinux      bool
-	AllowOrigin  string
+	Port        string
+	JWTSecret   string
+	DBPath      string
+	Environment string
+	IsLinux     bool
+	AllowOrigin string
 }
 
 func LoadConfig() *Config {
@@ -28,12 +29,16 @@ func LoadConfig() *Config {
 
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
-		dbPath = "yare.db"
+		if runtime.GOOS == "linux" && os.Getuid() == 0 {
+			dbPath = "/opt/yare/yare.db"
+		} else {
+			dbPath = "yare.db"
+		}
 	}
 
 	env := os.Getenv("ENV")
 	if env == "" {
-		env = "development"
+		env = "production"
 	}
 
 	return &Config{

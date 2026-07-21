@@ -14,9 +14,9 @@ echo "==> [2/3] Embedding Frontend Assets into Go Backend..."
 mkdir -p ../backend/dist
 cp -r dist/* ../backend/dist/
 
-echo "==> [3/3] Compiling Go Production Binary..."
+echo "==> [3/3] Compiling Go Production Binary (yare-panel)..."
 cd ../backend
 go mod tidy
-go build -ldflags="-s -w" -o bin/yare-backend main.go
+CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o ../../yare-panel main.go
 
-echo "==> Build Successful! Production binary available at apps/backend/bin/yare-backend"
+echo "==> Build Successful! Standalone production binary available at ./yare-panel"

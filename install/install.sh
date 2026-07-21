@@ -81,7 +81,7 @@ fi
 echo -e "${CYAN}[3/6] Configuring service paths and binary setup...${NC}"
 mkdir -p "$INSTALL_DIR" "$CONF_DIR"
 
-BINARY_DEST="$INSTALL_DIR/yare-backend"
+BINARY_DEST="$INSTALL_DIR/yare-panel"
 
 # Binary Acquisition Strategy:
 # 1. Local compiled binary in repo
@@ -90,13 +90,13 @@ BINARY_DEST="$INSTALL_DIR/yare-backend"
 
 INSTALLED_BINARY=0
 
-if [ -f "./apps/backend/bin/yare-backend" ]; then
+if [ -f "./yare-panel" ]; then
   echo -e "${GREEN}[INFO] Found locally pre-compiled binary.${NC}"
-  cp "./apps/backend/bin/yare-backend" "$BINARY_DEST"
+  cp "./yare-panel" "$BINARY_DEST"
   chmod +x "$BINARY_DEST"
   INSTALLED_BINARY=1
-elif [ -f "./yare-backend" ]; then
-  cp "./yare-backend" "$BINARY_DEST"
+elif [ -f "./apps/backend/yare-panel" ]; then
+  cp "./apps/backend/yare-panel" "$BINARY_DEST"
   chmod +x "$BINARY_DEST"
   INSTALLED_BINARY=1
 fi

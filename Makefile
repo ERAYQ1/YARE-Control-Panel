@@ -23,7 +23,9 @@ dev:
 	npm run dev
 
 build:
-	npm run build
+	npm run build:frontend
+	node scripts/copy-dist.js
+	cd apps/backend && CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o ../../yare-panel main.go
 
 docker-build:
 	npm run docker:build
