@@ -26,7 +26,7 @@ export function Dashboard() {
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
   const fetchMetrics = () => {
-    api.get('/system/metrics')
+    api.get('/dashboard/stats')
       .then((res) => {
         setMetrics(res.data);
         const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });

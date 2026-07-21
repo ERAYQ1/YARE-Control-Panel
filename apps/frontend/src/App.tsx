@@ -1,14 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { CommandPalette } from './components/ui/CommandPalette';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { ToastContainer, ToastMessage } from './components/ui/Toast';
 import { Login } from './views/Login';
 import { Dashboard } from './views/Dashboard';
+import { System } from './views/System';
 import { FileManager } from './views/FileManager';
 import { WebTerminal } from './views/WebTerminal';
 import { AppStore } from './views/AppStore';
+import { Services } from './views/Services';
+import { Docker } from './views/Docker';
+import { Network } from './views/Network';
+import { Logs } from './views/Logs';
 import { Settings } from './views/Settings';
+import { BackupManagerView } from './views/BackupManager';
+import { ProxyManagerView } from './views/ProxyManager';
 
 export function App() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('yare_token'));
@@ -22,6 +30,12 @@ export function App() {
   const [toasts, setToasts] = useState<ToastMessage[]>([
     { id: 't1', type: 'info', title: 'YARE OS v2.0', message: 'Simple & Fast Server Management Active.' }
   ]);
+
+  // Apply saved theme on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('yare_theme') || 'dark';
+    document.documentElement.className = savedTheme;
+  }, []);
 
   const addToast = (type: 'success' | 'error' | 'warning' | 'info', title: string, message?: string) => {
     const id = `toast-${Date.now()}`;
@@ -54,6 +68,25 @@ export function App() {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
+  // Route-level error boundaries protect each view independently
+  const renderView = () => {
+    switch (activeTab) {
+      case 'dashboard':    return <Dashboard />;
+      case 'system':       return <System />;
+      case 'appstore':     return <AppStore />;
+      case 'filemanager':  return <FileManager />;
+      case 'terminal':     return <WebTerminal />;
+      case 'services':     return <Services />;
+      case 'docker':       return <Docker />;
+      case 'network':      return <Network />;
+      case 'logs':         return <Logs />;
+      case 'backups':      return <BackupManagerView />;
+      case 'proxy':        return <ProxyManagerView />;
+      case 'settings':     return <Settings />;
+      default:             return <Dashboard />;
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-app-theme text-primary-theme font-sans transition-colors duration-200">
       {/* Navigation Sidebar */}
@@ -70,11 +103,9 @@ export function App() {
         />
 
         <main className="flex-1 p-6 overflow-y-auto bg-app-theme transition-colors duration-200">
-          {activeTab === 'dashboard' && <Dashboard />}
-          {activeTab === 'appstore' && <AppStore />}
-          {activeTab === 'filemanager' && <FileManager />}
-          {activeTab === 'terminal' && <WebTerminal />}
-          {activeTab === 'settings' && <Settings />}
+          <ErrorBoundary>
+            {renderView()}
+          </ErrorBoundary>
         </main>
       </div>
 
