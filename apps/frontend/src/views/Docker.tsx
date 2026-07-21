@@ -18,44 +18,22 @@ export function Docker() {
     if (activeTab === 'containers') {
       api.get('/docker/containers')
         .then((res) => setContainers(res.data))
-        .catch(() => {
-          setContainers([
-            { id: 'c8f1e290a1b2', name: 'yare-web-app', image: 'yare/panel:latest', status: 'Up 3 days', state: 'running', created: '3 days ago', ports: ['0.0.0.0:8080->8080/tcp'], cpuUsage: 1.2, memoryUsage: 45 * 1024 * 1024, memoryLimit: 512 * 1024 * 1024 },
-            { id: 'a1b2c3d4e5f6', name: 'production-postgres', image: 'postgres:16-alpine', status: 'Up 5 days', state: 'running', created: '5 days ago', ports: ['127.0.0.1:5432->5432/tcp'], cpuUsage: 0.8, memoryUsage: 180 * 1024 * 1024, memoryLimit: 2048 * 1024 * 1024 },
-            { id: 'f9e8d7c6b5a4', name: 'redis-cache', image: 'redis:7-alpine', status: 'Up 5 days', state: 'running', created: '5 days ago', ports: ['127.0.0.1:6379->6379/tcp'], cpuUsage: 0.3, memoryUsage: 38 * 1024 * 1024, memoryLimit: 1024 * 1024 * 1024 }
-          ]);
-        })
+        .catch(() => setContainers([]))
         .finally(() => setIsLoading(false));
     } else if (activeTab === 'images') {
       api.get('/docker/images')
         .then((res) => setImages(res.data))
-        .catch(() => {
-          setImages([
-            { id: 'sha256:e9d1', repository: 'yare/panel', tag: 'latest', size: 184000000, created: '3 days ago' },
-            { id: 'sha256:a4b2', repository: 'postgres', tag: '16-alpine', size: 240000000, created: '2 weeks ago' },
-            { id: 'sha256:f5c8', repository: 'redis', tag: '7-alpine', size: 35000000, created: '1 month ago' }
-          ]);
-        })
+        .catch(() => setImages([]))
         .finally(() => setIsLoading(false));
     } else if (activeTab === 'volumes') {
       api.get('/docker/volumes')
         .then((res) => setVolumes(res.data))
-        .catch(() => {
-          setVolumes([
-            { name: 'postgres_data', driver: 'local', mountpoint: '/var/lib/docker/volumes/postgres_data/_data', created: '2026-07-15' },
-            { name: 'redis_data', driver: 'local', mountpoint: '/var/lib/docker/volumes/redis_data/_data', created: '2026-07-15' }
-          ]);
-        })
+        .catch(() => setVolumes([]))
         .finally(() => setIsLoading(false));
     } else if (activeTab === 'networks') {
       api.get('/docker/networks')
         .then((res) => setNetworks(res.data))
-        .catch(() => {
-          setNetworks([
-            { id: 'bridge01', name: 'bridge', driver: 'bridge', scope: 'local' },
-            { id: 'yare_net', name: 'yare_default', driver: 'bridge', scope: 'local' }
-          ]);
-        })
+        .catch(() => setNetworks([]))
         .finally(() => setIsLoading(false));
     }
   }, [activeTab]);

@@ -15,16 +15,7 @@ export function Services() {
     setIsLoading(true);
     api.get('/services')
       .then((res) => setServices(res.data))
-      .catch(() => {
-        setServices([
-          { name: 'docker.service', description: 'Docker Application Container Engine', loadState: 'loaded', activeState: 'active', subState: 'running', isEnabled: true, pid: 1042, memoryUsage: 280 * 1024 * 1024 },
-          { name: 'nginx.service', description: 'A high performance web server', loadState: 'loaded', activeState: 'active', subState: 'running', isEnabled: true, pid: 844, memoryUsage: 18 * 1024 * 1024 },
-          { name: 'yare.service', description: 'YARE Server Platform Service', loadState: 'loaded', activeState: 'active', subState: 'running', isEnabled: true, pid: 1894, memoryUsage: 45 * 1024 * 1024 },
-          { name: 'postgresql.service', description: 'PostgreSQL RDBMS Engine', loadState: 'loaded', activeState: 'active', subState: 'running', isEnabled: true, pid: 3120, memoryUsage: 340 * 1024 * 1024 },
-          { name: 'apache2.service', description: 'Apache HTTP Server', loadState: 'loaded', activeState: 'inactive', subState: 'dead', isEnabled: false, pid: 0, memoryUsage: 0 },
-          { name: 'fail2ban.service', description: 'Authentication monitor daemon', loadState: 'loaded', activeState: 'failed', subState: 'failed', isEnabled: true, pid: 0, memoryUsage: 0 }
-        ]);
-      })
+      .catch(() => setServices([]))
       .finally(() => setIsLoading(false));
   };
 

@@ -12,15 +12,7 @@ export function Logs() {
   const fetchLogs = () => {
     api.get(`/logs?source=${source}`)
       .then((res) => setLogs(res.data))
-      .catch(() => {
-        const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        setLogs([
-          { id: '1', timestamp: now, source: source, level: 'info', message: 'YARE daemon service initialized successfully', serviceName: 'yare.service' },
-          { id: '2', timestamp: now, source: source, level: 'info', message: 'User admin logged in from IP 192.168.1.50', serviceName: 'auth' },
-          { id: '3', timestamp: now, source: source, level: 'warn', message: 'High memory usage on container production-postgres', serviceName: 'dockerd' },
-          { id: '4', timestamp: now, source: source, level: 'info', message: 'Systemd reloaded service unit file nginx.service', serviceName: 'systemd' }
-        ]);
-      });
+      .catch(() => setLogs([]));
   };
 
   useEffect(() => {

@@ -2,8 +2,11 @@ package v1
 
 import (
 	"net/http"
-	"time"
+	"os/exec"
+	"runtime"
+	"strings"
 
+	"yare-backend/internal/database"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,17 +17,49 @@ func NewLogsController() *LogsController {
 }
 
 func (lc *LogsController) GetLogs(c *gin.Context) {
-	source := c.DefaultQuery("source", "system") // system, kernel, auth, docker, service
+	source := c.DefaultQuery("source", "system")
 
-	now := time.Now()
+	var logs []gin.H
 
-	logs := []gin.H{
-		{"id": "log-1", "timestamp": now.Add(-10 * time.Minute).Format("2006-01-02 15:04:05"), "source": source, "level": "info", "message": "YARE daemon service initialized successfully", "serviceName": "yare.service"},
-		{"id": "log-2", "timestamp": now.Add(-8 * time.Minute).Format("2006-01-02 15:04:05"), "source": source, "level": "info", "message": "User 'admin' logged in successfully from IP 192.168.1.50", "serviceName": "auth"},
-		{"id": "log-3", "timestamp": now.Add(-5 * time.Minute).Format("2006-01-02 15:04:05"), "source": source, "level": "warn", "message": "High memory consumption detected on container 'production-postgres' (88%)", "serviceName": "dockerd"},
-		{"id": "log-4", "timestamp": now.Add(-3 * time.Minute).Format("2006-01-02 15:04:05"), "source": source, "level": "info", "message": "Systemd reloaded service unit file nginx.service", "serviceName": "systemd"},
-		{"id": "log-5", "timestamp": now.Add(-1 * time.Minute).Format("2006-01-02 15:04:05"), "source": source, "level": "info", "message": "Periodic SQLite database backup completed without errors", "serviceName": "yare-db"},
-		{"id": "log-6", "timestamp": now.Format("2006-01-02 15:04:05"), "source": source, "level": "info", "message": "WebSocket client connected to /api/v1/ws/metrics", "serviceName": "ws-engine"},
+	// 1. Fetch real audit logs from SQLite database
+	rows, err := database.DB.Query(`SELECT id, created_at, action, username, ip_address, details FROM audit_logs ORDER BY created_at DESC LIMIT 50`)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var id, createdAt, action, username, ip, details string
+			if err := rows.Scan(&id, &createdAt, &action, &username, &ip, &details); err == nil {
+				logs = append(logs, gin.H{
+					"id":          id,
+					"timestamp":   createdAt,
+					"source":      source,
+					"level":       "info",
+					"message":     action + ": " + details + " (User: " + username + ", IP: " + ip + ")",
+					"serviceName": "audit-log",
+				})
+			}
+		}
+	}
+
+	// 2. Fetch real journalctl system logs on Linux if available
+	if runtime.GOOS == "linux" && len(logs) < 10 {
+		cmd := exec.Command("journalctl", "-n", "30", "--no-pager", "-o", "short-iso")
+		out, err := cmd.Output()
+		if err == nil {
+			lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+			for i, line := range lines {
+				if strings.TrimSpace(line) == "" {
+					continue
+				}
+				logs = append(logs, gin.H{
+					"id":          "jlog-" + strings.TrimSpace(line[:10]) + "-" + string(rune(i)),
+					"timestamp":   line[:19],
+					"source":      "system",
+					"level":       "info",
+					"message":     line,
+					"serviceName": "journald",
+				})
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, logs)

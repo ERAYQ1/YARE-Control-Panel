@@ -1,9 +1,14 @@
 package v1
 
 import (
+	"fmt"
 	"net/http"
+	"os/exec"
+	"runtime"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	gopsnet "github.com/shirou/gopsutil/v3/net"
 )
 
 type NetworkController struct{}
@@ -13,61 +18,117 @@ func NewNetworkController() *NetworkController {
 }
 
 func (nc *NetworkController) GetInterfaces(c *gin.Context) {
-	interfaces := []gin.H{
-		{
-			"name":       "eth0",
-			"ipAddress":  "192.168.1.120 / 24",
-			"macAddress": "02:42:ac:11:00:02",
-			"isUp":       true,
-			"rxBytes":    1024 * 1024 * 1450,
-			"txBytes":    1024 * 1024 * 820,
-			"speed":      "10000 Mbps",
-		},
-		{
-			"name":       "docker0",
-			"ipAddress":  "172.17.0.1 / 16",
-			"macAddress": "02:42:be:89:12:ef",
-			"isUp":       true,
-			"rxBytes":    1024 * 1024 * 210,
-			"txBytes":    1024 * 1024 * 180,
-			"speed":      "Virtual",
-		},
-		{
-			"name":       "lo",
-			"ipAddress":  "127.0.0.1 / 8",
-			"macAddress": "00:00:00:00:00:00",
-			"isUp":       true,
-			"rxBytes":    1024 * 1024 * 540,
-			"txBytes":    1024 * 1024 * 540,
-			"speed":      "Loopback",
-		},
+	netInterfaces, err := gopsnet.Interfaces()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to enumerate network interfaces: " + err.Error()})
+		return
 	}
+
+	ioCounters, _ := gopsnet.IOCounters(true)
+	ioMap := make(map[string]gopsnet.IOCountersStat)
+	for _, io := range ioCounters {
+		ioMap[io.Name] = io
+	}
+
+	var interfaces []gin.H
+	for _, iface := range netInterfaces {
+		var ipAddr string
+		if len(iface.Addrs) > 0 {
+			ipAddr = iface.Addrs[0].Addr
+		}
+		isUp := false
+		for _, flag := range iface.Flags {
+			if flag == "up" {
+				isUp = true
+				break
+			}
+		}
+
+		var rxBytes, txBytes uint64
+		if ioStat, ok := ioMap[iface.Name]; ok {
+			rxBytes = ioStat.BytesRecv
+			txBytes = ioStat.BytesSent
+		}
+
+		interfaces = append(interfaces, gin.H{
+			"name":       iface.Name,
+			"ipAddress":  ipAddr,
+			"macAddress": iface.HardwareAddr,
+			"isUp":       isUp,
+			"rxBytes":    rxBytes,
+			"txBytes":    txBytes,
+			"speed":      "Auto-Negotiated",
+		})
+	}
+
 	c.JSON(http.StatusOK, interfaces)
 }
 
 func (nc *NetworkController) GetOpenPorts(c *gin.Context) {
-	openPorts := []gin.H{
-		{"port": 22, "protocol": "TCP", "processName": "sshd", "pid": 712, "state": "LISTEN", "user": "root"},
-		{"port": 80, "protocol": "TCP", "processName": "nginx", "pid": 844, "state": "LISTEN", "user": "www-data"},
-		{"port": 443, "protocol": "TCP", "processName": "nginx", "pid": 844, "state": "LISTEN", "user": "www-data"},
-		{"port": 8080, "protocol": "TCP", "processName": "yare-backend", "pid": 1894, "state": "LISTEN", "user": "yare"},
-		{"port": 5432, "protocol": "TCP", "processName": "postgres", "pid": 3120, "state": "LISTEN", "user": "postgres"},
-		{"port": 6379, "protocol": "TCP", "processName": "redis-server", "pid": 4051, "state": "LISTEN", "user": "redis"},
+	connections, err := gopsnet.Connections("tcp")
+	var openPorts []gin.H
+
+	if err == nil {
+		seenPorts := make(map[uint32]bool)
+		for _, conn := range connections {
+			if conn.Status == "LISTEN" && conn.Laddr.Port > 0 {
+				if seenPorts[conn.Laddr.Port] {
+					continue
+				}
+				seenPorts[conn.Laddr.Port] = true
+
+				openPorts = append(openPorts, gin.H{
+					"port":        conn.Laddr.Port,
+					"protocol":    "TCP",
+					"processName": fmt.Sprintf("PID %d", conn.Pid),
+					"pid":         conn.Pid,
+					"state":       "LISTEN",
+					"user":        "system",
+				})
+			}
+		}
 	}
+
 	c.JSON(http.StatusOK, openPorts)
 }
 
 func (nc *NetworkController) GetFirewallRules(c *gin.Context) {
-	rules := []gin.H{
-		{"id": "1", "action": "ALLOW", "from": "Anywhere", "toPort": "22/tcp", "protocol": "TCP", "comment": "SSH Access"},
-		{"id": "2", "action": "ALLOW", "from": "Anywhere", "toPort": "80/tcp", "protocol": "TCP", "comment": "HTTP Web"},
-		{"id": "3", "action": "ALLOW", "from": "Anywhere", "toPort": "443/tcp", "protocol": "TCP", "comment": "HTTPS Web"},
-		{"id": "4", "action": "ALLOW", "from": "192.168.1.0/24", "toPort": "8080/tcp", "protocol": "TCP", "comment": "YARE Panel Management"},
-		{"id": "5", "action": "DENY", "from": "Anywhere", "toPort": "5432/tcp", "protocol": "TCP", "comment": "Block External Postgres"},
+	status := "inactive"
+	var rules []gin.H
+
+	if runtime.GOOS == "linux" {
+		cmd := exec.Command("ufw", "status", "numbered")
+		output, err := cmd.Output()
+		if err == nil {
+			outStr := string(output)
+			if strings.Contains(outStr, "Status: active") {
+				status = "active"
+				lines := strings.Split(outStr, "\n")
+				for _, line := range lines {
+					line = strings.TrimSpace(line)
+					if strings.HasPrefix(line, "[") {
+						parts := strings.Fields(line)
+						if len(parts) >= 3 {
+							ruleID := strings.Trim(parts[0], "[]")
+							action := parts[2]
+							toPort := parts[1]
+							rules = append(rules, gin.H{
+								"id":       ruleID,
+								"action":   action,
+								"from":     "Anywhere",
+								"toPort":   toPort,
+								"protocol": "TCP/UDP",
+								"comment":  "System UFW Rule",
+							})
+						}
+					}
+				}
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"status": "active",
+		"status": status,
 		"rules":  rules,
 	})
 }

@@ -46,15 +46,7 @@ export function FileManager() {
         setItems(res.data.items);
       })
       .catch(() => {
-        // Fallback sample files
-        setItems([
-          { name: 'etc', path: '/etc', isDir: true, size: 4096, permissions: 'rwxr-xr-x', owner: 'root', group: 'root', modTime: '2026-07-20 12:00:00', mode: 755 },
-          { name: 'var', path: '/var', isDir: true, size: 4096, permissions: 'rwxr-xr-x', owner: 'root', group: 'root', modTime: '2026-07-20 12:00:00', mode: 755 },
-          { name: 'home', path: '/home', isDir: true, size: 4096, permissions: 'rwxr-xr-x', owner: 'root', group: 'root', modTime: '2026-07-20 14:30:00', mode: 755 },
-          { name: 'docker-compose.yml', path: '/docker-compose.yml', isDir: false, size: 1240, permissions: 'rw-r--r--', owner: 'yare', group: 'yare', modTime: '2026-07-20 15:10:00', extension: '.yml', mode: 644 },
-          { name: 'nginx.conf', path: '/nginx.conf', isDir: false, size: 2450, permissions: 'rw-r--r--', owner: 'root', group: 'root', modTime: '2026-07-20 10:20:00', extension: '.conf', mode: 644 },
-          { name: 'server_preview.png', path: '/server_preview.png', isDir: false, size: 184000, permissions: 'rw-r--r--', owner: 'yare', group: 'yare', modTime: '2026-07-20 11:00:00', extension: '.png', mode: 644 }
-        ]);
+        setItems([]);
       })
       .finally(() => setIsLoading(false));
   };
