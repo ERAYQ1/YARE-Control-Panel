@@ -2,22 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   Search,
   LayoutDashboard,
-  Cpu,
   FolderKanban,
   Terminal,
-  Activity,
   Package,
-  Archive,
   Settings,
   X,
-  ArrowRight,
-  Globe,
-  Clock,
-  Bell,
-  Network,
-  FileText,
-  Users,
-  ShieldCheck
+  ArrowRight
 } from 'lucide-react';
 
 interface CommandPaletteProps {
@@ -47,21 +37,11 @@ export function CommandPalette({ isOpen, onClose, onSelectTab }: CommandPaletteP
   if (!isOpen) return null;
 
   const actions = [
-    { id: 'dashboard', title: 'Dashboard / Genel Bakış', group: 'Main', icon: LayoutDashboard, path: 'Real-time telemetry, load & quick stats' },
-    { id: 'appstore', title: 'Apps / Uygulamalar', group: 'Main', icon: Package, path: '1-Click App Catalog & GitHub Deployer' },
-    { id: 'system', title: 'Sistem Detayları / Specs', group: 'System', icon: Cpu, path: 'Hardware topology, kernel, PCI & USB' },
-    { id: 'filemanager', title: 'Dosya Yöneticisi / Files', group: 'System', icon: FolderKanban, path: 'Visual file browser & code editor' },
-    { id: 'terminal', title: 'Web Terminal / Console', group: 'System', icon: Terminal, path: 'Interactive PTY WebSocket shell' },
-    { id: 'services', title: 'Servis Yöneticisi / Services', group: 'System', icon: Activity, path: 'Systemd daemons start, stop & restart' },
-    { id: 'network', title: 'Ağ & Portlar / Network', group: 'System', icon: Network, path: 'Open ports, network interfaces & firewall' },
-    { id: 'logs', title: 'Sistem Logları / Logs', group: 'System', icon: FileText, path: 'Journalctl & system log stream' },
-    { id: 'proxy', title: 'Ters Proxy & SSL', group: 'Tools', icon: Globe, path: 'Reverse proxy hosts & Nginx exporter' },
-    { id: 'cron', title: 'Visual Cron Jobs', group: 'Tools', icon: Clock, path: 'Scheduled cron task manager & logs' },
-    { id: 'backups', title: 'Yedekleme & Kurtarma', group: 'Tools', icon: Archive, path: 'Tarball system backups & 1-click restore' },
-    { id: 'alerts', title: 'Alarm & Bildirimler', group: 'Tools', icon: Bell, path: 'Telegram, Discord, Slack & Webhook alerts' },
-    { id: 'users', title: 'Kullanıcı Yönetimi', group: 'Security', icon: Users, path: 'Panel accounts, Linux users & SSH keys' },
-    { id: 'audit', title: 'Güvenlik Logları', group: 'Security', icon: ShieldCheck, path: 'Audit logs & login security history' },
-    { id: 'settings', title: 'Ayarlar / Settings', group: 'Security', icon: Settings, path: 'Account security, 2FA & preferences' },
+    { id: 'dashboard', title: 'Dashboard / Genel Bakış', group: 'Core', icon: LayoutDashboard, path: 'Real-time telemetry, load & quick stats' },
+    { id: 'appstore', title: 'App Store / Uygulama Mağazası', group: 'Core', icon: Package, path: '1-Click App Catalog & Deployer' },
+    { id: 'filemanager', title: 'Dosya Yöneticisi / Files', group: 'Tools', icon: FolderKanban, path: 'Visual file browser & code editor' },
+    { id: 'terminal', title: 'Web Terminal / Console', group: 'Tools', icon: Terminal, path: 'Interactive PTY WebSocket shell' },
+    { id: 'settings', title: 'Ayarlar / Settings', group: 'System', icon: Settings, path: 'Account security, password & preferences' },
   ];
 
   const filtered = actions.filter((a) =>
@@ -80,7 +60,7 @@ export function CommandPalette({ isOpen, onClose, onSelectTab }: CommandPaletteP
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Type to search section... (e.g. Proxy, Cron, Terminal, Users)"
+            placeholder="Type to search... (e.g. Dashboard, App Store, Terminal)"
             autoFocus
             className="w-full bg-transparent text-sm text-primary-theme placeholder-muted-theme focus:outline-none font-medium"
           />

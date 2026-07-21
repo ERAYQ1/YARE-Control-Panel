@@ -5,19 +5,9 @@ import { CommandPalette } from './components/ui/CommandPalette';
 import { ToastContainer, ToastMessage } from './components/ui/Toast';
 import { Login } from './views/Login';
 import { Dashboard } from './views/Dashboard';
-import { System } from './views/System';
 import { FileManager } from './views/FileManager';
 import { WebTerminal } from './views/WebTerminal';
 import { AppStore } from './views/AppStore';
-import { Services } from './views/Services';
-import { Network } from './views/Network';
-import { Logs } from './views/Logs';
-import { ProxyManagerView } from './views/ProxyManager';
-import { CronManagerView } from './views/CronManager';
-import { BackupManagerView } from './views/BackupManager';
-import { AlertManagerView } from './views/AlertManager';
-import { Users } from './views/Users';
-import { AuditLogsView } from './views/AuditLogs';
 import { Settings } from './views/Settings';
 
 export function App() {
@@ -30,7 +20,7 @@ export function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([
-    { id: 't1', type: 'info', title: 'YARE Control Panel v2.0', message: 'Connected to Linux host telemetry stream.' }
+    { id: 't1', type: 'info', title: 'YARE OS v2.0', message: 'Simple & Fast Server Management Active.' }
   ]);
 
   const addToast = (type: 'success' | 'error' | 'warning' | 'info', title: string, message?: string) => {
@@ -82,18 +72,8 @@ export function App() {
         <main className="flex-1 p-6 overflow-y-auto bg-app-theme transition-colors duration-200">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'appstore' && <AppStore />}
-          {activeTab === 'system' && <System />}
           {activeTab === 'filemanager' && <FileManager />}
           {activeTab === 'terminal' && <WebTerminal />}
-          {activeTab === 'services' && <Services />}
-          {activeTab === 'network' && <Network />}
-          {activeTab === 'logs' && <Logs />}
-          {activeTab === 'proxy' && <ProxyManagerView />}
-          {activeTab === 'cron' && <CronManagerView />}
-          {activeTab === 'backups' && <BackupManagerView />}
-          {activeTab === 'alerts' && <AlertManagerView />}
-          {activeTab === 'users' && <Users />}
-          {activeTab === 'audit' && <AuditLogsView />}
           {activeTab === 'settings' && <Settings />}
         </main>
       </div>
