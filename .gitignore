@@ -1,41 +1,89 @@
-# Node & Dependencies
+# ==============================================================================
+# YARE Control Panel - .gitignore
+# ==============================================================================
+
+# Node.js & Package Managers
 node_modules/
 .pnpm-store/
+.npm/
+.node_repl_history
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# Build Outputs
+# Build Outputs & Caches
 dist/
 build/
+out/
 bin/
+coverage/
+.vite/
+.cache/
+.turbo/
+.eslintcache
 !apps/backend/dist/.gitkeep
+
+# Go Executables & Compiled Binaries
+yare-backend
+yare-backend.exe
+yare-panel
+yare-panel.exe
 *.exe
 *.exe?
 *.dll
 *.so
 *.dylib
+*.test
+*.out
 
-# Go & Databases
-apps/backend/yare-backend
-apps/backend/yare-backend.exe
+# YARE SQLite Databases & Runtime Data
+yare.db*
 *.db
 *.db-*
-apps/backend/*.db
-apps/backend/*.db-journal
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-shm
+*.db-wal
+data/
+uploads/
+backups/
+logs/
+tmp/
+temp/
+*.tmp
+*.log
+*.tar.gz
+*.zip
 
-# Environment & Configs
+# Environment & Config Files (Allow .env.example)
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
-# IDEs & System Files
+# Secrets, Certificates & Keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+*.secret
+secrets.*
+credentials.*
+
+# IDE & System Metadata
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 .DS_Store
+.DS_Store?
 Thumbs.db
-*.log
+ehthumbs.db
+desktop.ini
