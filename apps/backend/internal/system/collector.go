@@ -57,7 +57,6 @@ type SystemMetrics struct {
 	Disk          DiskSpec       `json:"disk"`
 	Network       NetSpec        `json:"network"`
 	Processes     ProcSpec       `json:"processes"`
-	DockerSummary *DockerSummary `json:"dockerSummary,omitempty"`
 }
 
 type CPUSpec struct {
@@ -101,11 +100,7 @@ type ProcSpec struct {
 	TopMemory []ProcessInfo `json:"topMemory"`
 }
 
-type DockerSummary struct {
-	ContainersTotal   int `json:"containersTotal"`
-	ContainersRunning int `json:"containersRunning"`
-	ImagesTotal       int `json:"imagesTotal"`
-}
+
 
 var lastRx uint64
 var lastTx uint64

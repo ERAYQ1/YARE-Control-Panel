@@ -17,7 +17,6 @@ func RegisterRoutes(r *gin.Engine, jwtSecret string) {
 	systemCtrl := NewSystemController()
 	fileManagerCtrl := NewFileManagerController()
 	servicesCtrl := NewServicesController()
-	dockerCtrl := NewDockerController()
 	networkCtrl := NewNetworkController()
 	terminalCtrl := NewTerminalController()
 	logsCtrl := NewLogsController()
@@ -105,13 +104,6 @@ func RegisterRoutes(r *gin.Engine, jwtSecret string) {
 			// Services
 			protected.GET("/services", servicesCtrl.ListServices)
 			protected.POST("/services/:name/:action", middleware.RoleMiddleware("admin", "operator"), servicesCtrl.ServiceAction)
-
-			// Docker
-			protected.GET("/docker/containers", dockerCtrl.GetContainers)
-			protected.GET("/docker/images", dockerCtrl.GetImages)
-			protected.GET("/docker/volumes", dockerCtrl.GetVolumes)
-			protected.GET("/docker/networks", dockerCtrl.GetNetworks)
-			protected.POST("/docker/containers/:id/:action", middleware.RoleMiddleware("admin", "operator"), dockerCtrl.ContainerAction)
 
 			// Network
 			protected.GET("/network/interfaces", networkCtrl.GetInterfaces)

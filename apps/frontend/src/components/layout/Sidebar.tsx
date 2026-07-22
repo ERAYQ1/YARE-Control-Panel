@@ -9,7 +9,6 @@ import {
   Server,
   Cpu,
   Activity,
-  Container,
   Globe,
   ScrollText,
   Archive,
@@ -57,7 +56,6 @@ export function Sidebar({ activeTab, setActiveTab, hostname = 'yare-server' }: S
         { id: 'filemanager', label: t('filemanager') || 'File Manager', icon: FolderKanban },
         { id: 'terminal', label: t('terminal') || 'Web Terminal', icon: Terminal },
         { id: 'services', label: 'Services', icon: Activity },
-        { id: 'docker', label: 'Docker', icon: Container },
       ],
     },
     {

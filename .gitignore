@@ -1,5 +1,5 @@
 # ==============================================================================
-# YARE Control Panel - .gitignore
+# YARE Control Panel (YARE OS) - .gitignore
 # ==============================================================================
 
 # Node.js & Package Managers
@@ -16,12 +16,15 @@ pnpm-debug.log*
 dist/
 build/
 out/
+out-win/
 bin/
 coverage/
 .vite/
 .cache/
 .turbo/
 .eslintcache
+apps/frontend/dist/
+apps/backend/dist/*
 !apps/backend/dist/.gitkeep
 
 # Go Executables & Compiled Binaries
@@ -37,7 +40,7 @@ yare-panel.exe
 *.test
 *.out
 
-# YARE SQLite Databases & Runtime Data
+# SQLite Databases & Runtime Storage
 yare.db*
 *.db
 *.db-*
@@ -79,6 +82,7 @@ credentials.*
 # IDE & System Metadata
 .vscode/
 .idea/
+.gemini/
 *.swp
 *.swo
 *~

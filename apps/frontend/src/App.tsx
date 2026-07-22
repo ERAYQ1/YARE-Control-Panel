@@ -11,7 +11,6 @@ import { FileManager } from './views/FileManager';
 import { WebTerminal } from './views/WebTerminal';
 import { AppStore } from './views/AppStore';
 import { Services } from './views/Services';
-import { Docker } from './views/Docker';
 import { Network } from './views/Network';
 import { Logs } from './views/Logs';
 import { Settings } from './views/Settings';
@@ -77,7 +76,6 @@ export function App() {
       case 'filemanager':  return <FileManager />;
       case 'terminal':     return <WebTerminal />;
       case 'services':     return <Services />;
-      case 'docker':       return <Docker />;
       case 'network':      return <Network />;
       case 'logs':         return <Logs />;
       case 'backups':      return <BackupManagerView />;
