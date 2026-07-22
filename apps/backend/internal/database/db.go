@@ -142,6 +142,18 @@ func createTables() {
 		}
 	}
 
+	// Migration & Performance Indexes
+	indexes := []string{
+		"CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at)",
+		"CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)",
+		"CREATE INDEX IF NOT EXISTS idx_installed_apps_created ON installed_apps(created_at)",
+		"CREATE INDEX IF NOT EXISTS idx_proxy_hosts_domain ON proxy_hosts(domain)",
+	}
+
+	for _, idx := range indexes {
+		_, _ = DB.Exec(idx)
+	}
+
 	// Migration: Add column if missing in existing databases
 	_, _ = DB.Exec("ALTER TABLE users ADD COLUMN must_change_password INTEGER DEFAULT 0")
 }

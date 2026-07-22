@@ -10,8 +10,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"yare-backend/internal/alertworker"
 	v1 "yare-backend/internal/api/v1"
 	"yare-backend/internal/config"
+	"yare-backend/internal/cronworker"
 	"yare-backend/internal/database"
 
 	"github.com/gin-contrib/cors"
@@ -54,6 +56,10 @@ func main() {
 
 	// Initialize SQLite Database
 	database.InitDB(cfg.DBPath)
+
+	// Start Background Automation Workers
+	cronworker.StartCronScheduler()
+	alertworker.StartAlertMonitor()
 
 	r := gin.Default()
 

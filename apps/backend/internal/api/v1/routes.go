@@ -34,17 +34,22 @@ func RegisterRoutes(r *gin.Engine, jwtSecret string) {
 	{
 		// Public Auth Endpoints (5 login attempts per minute per IP)
 		v1.POST("/auth/login", middleware.RateLimitMiddleware(5, 1*time.Minute), authCtrl.Login)
+		v1.POST("/auth/2fa/login", middleware.RateLimitMiddleware(5, 1*time.Minute), authCtrl.Login2FA)
 		v1.POST("/auth/refresh", authCtrl.Refresh)
 
-		// Public WebSockets
-		v1.GET("/ws/metrics", dashboardCtrl.StreamMetricsWS)
-		v1.GET("/ws/terminal", terminalCtrl.HandleWebsocket)
-
-		// Protected Endpoints
+		// Protected Endpoints (Requires valid JWT Token via Authorization header or ?token= query param)
 		protected := v1.Group("")
 		protected.Use(middleware.AuthMiddleware(jwtSecret))
 		{
 			protected.GET("/auth/me", authCtrl.Me)
+			protected.POST("/auth/change-password", authCtrl.ChangePassword)
+			protected.POST("/auth/2fa/setup", authCtrl.Setup2FA)
+			protected.POST("/auth/2fa/verify", authCtrl.Verify2FA)
+			protected.POST("/auth/2fa/disable", authCtrl.Disable2FA)
+
+			// Protected WebSockets (JWT Token enforced via query parameter ?token=...)
+			protected.GET("/ws/metrics", dashboardCtrl.StreamMetricsWS)
+			protected.GET("/ws/terminal", terminalCtrl.HandleWebsocket)
 
 			// App Store & GitHub Engine
 			protected.GET("/appstore/curated", appStoreCtrl.GetCuratedApps)

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Settings as SettingsIcon, Save, Shield, Bell, Globe, Users as UsersIcon, Clock, ScrollText, RefreshCw } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Shield, Bell, Globe, Users as UsersIcon, Clock, ScrollText, Smartphone, KeyRound, CheckCircle, AlertCircle } from 'lucide-react';
 import { Users } from './Users';
 import { CronManagerView } from './CronManager';
 import { AlertManagerView } from './AlertManager';
@@ -14,21 +14,36 @@ export function Settings() {
   const [rateLimiting, setRateLimiting] = useState(true);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
+  // 2FA TOTP state
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [isSettingUp2FA, setIsSettingUp2FA] = useState(false);
+  const [totpSecret, setTotpSecret] = useState('');
+  const [otpURI, setOtpURI] = useState('');
+  const [verifyCode, setVerifyCode] = useState('');
+  const [disablePassword, setDisablePassword] = useState('');
+  const [disableCode, setDisableCode] = useState('');
+  const [isDisabling2FA, setIsDisabling2FA] = useState(false);
+  const [twoFactorError, setTwoFactorError] = useState('');
+  const [twoFactorSuccess, setTwoFactorSuccess] = useState('');
+
   useEffect(() => {
-    // Read persisted theme from localStorage on mount
     const savedTheme = localStorage.getItem('yare_theme') || 'dark';
     setTheme(savedTheme);
 
     api.get('/settings').then((res) => {
       if (res.data) {
-        const serverTheme = res.data.theme || savedTheme;
-        setTheme(serverTheme);
+        setTheme(res.data.theme || savedTheme);
         setChannel(res.data.updateChannel || 'stable');
+      }
+    }).catch(() => {});
+
+    api.get('/auth/me').then((res) => {
+      if (res.data) {
+        setTwoFactorEnabled(!!res.data.twoFactorEnabled);
       }
     }).catch(() => {});
   }, []);
 
-  // Live theme switching: apply theme class to <html> whenever it changes
   const applyTheme = (newTheme: string) => {
     const resolved = newTheme === 'system'
       ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
@@ -51,6 +66,50 @@ export function Settings() {
       });
   };
 
+  const handleInitiate2FA = async () => {
+    setTwoFactorError('');
+    setTwoFactorSuccess('');
+    try {
+      const res = await api.post('/auth/2fa/setup');
+      setTotpSecret(res.data.secret);
+      setOtpURI(res.data.otpuri);
+      setIsSettingUp2FA(true);
+    } catch (err: any) {
+      setTwoFactorError(err.response?.data?.error || 'Failed to initialize 2FA');
+    }
+  };
+
+  const handleVerify2FA = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTwoFactorError('');
+    setTwoFactorSuccess('');
+    try {
+      await api.post('/auth/2fa/verify', { code: verifyCode });
+      setTwoFactorEnabled(true);
+      setIsSettingUp2FA(false);
+      setVerifyCode('');
+      setTwoFactorSuccess('Two-Factor Authentication enabled successfully!');
+    } catch (err: any) {
+      setTwoFactorError(err.response?.data?.error || 'Invalid verification code');
+    }
+  };
+
+  const handleDisable2FA = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTwoFactorError('');
+    setTwoFactorSuccess('');
+    try {
+      await api.post('/auth/2fa/disable', { password: disablePassword, code: disableCode });
+      setTwoFactorEnabled(false);
+      setIsDisabling2FA(false);
+      setDisablePassword('');
+      setDisableCode('');
+      setTwoFactorSuccess('Two-Factor Authentication has been disabled.');
+    } catch (err: any) {
+      setTwoFactorError(err.response?.data?.error || 'Failed to disable 2FA');
+    }
+  };
+
   const subTabs = [
     { id: 'general' as const, label: 'General', icon: Globe },
     { id: 'users' as const, label: 'Users & SSH', icon: UsersIcon },
@@ -69,7 +128,6 @@ export function Settings() {
           <p className="text-xs text-muted-theme mt-1">Unified panel configuration, security accounts, cron jobs, alerts, and audit logs.</p>
         </div>
 
-        {/* Sub-Tab Selector */}
         <div className="flex items-center gap-1 p-1 rounded-xl border border-theme bg-card-theme">
           {subTabs.map((tab) => {
             const Icon = tab.icon;
@@ -130,6 +188,142 @@ export function Settings() {
                 </select>
               </div>
             </div>
+          </div>
+
+          {/* Two-Factor Authentication (2FA TOTP) */}
+          <div className="rounded-2xl border border-theme bg-surface-theme p-6 space-y-4">
+            <h3 className="text-sm font-bold text-primary-theme flex items-center justify-between border-b border-theme pb-3">
+              <span className="flex items-center gap-2">
+                <Smartphone className="h-4 w-4 text-cyan-400" /> Two-Factor Authentication (TOTP 2FA)
+              </span>
+              <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
+                twoFactorEnabled ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+              }`}>
+                {twoFactorEnabled ? '2FA Active' : '2FA Disabled'}
+              </span>
+            </h3>
+
+            {twoFactorError && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" /> {twoFactorError}
+              </div>
+            )}
+
+            {twoFactorSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" /> {twoFactorSuccess}
+              </div>
+            )}
+
+            {!twoFactorEnabled && !isSettingUp2FA && (
+              <div className="flex items-center justify-between text-xs">
+                <div>
+                  <p className="font-bold text-secondary-theme">Protect Your Account with Google Authenticator / Authy</p>
+                  <p className="text-muted-theme">Require a 6-digit TOTP code in addition to your password during sign in.</p>
+                </div>
+                <button
+                  onClick={handleInitiate2FA}
+                  className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold transition-all shrink-0"
+                >
+                  Enable 2FA
+                </button>
+              </div>
+            )}
+
+            {isSettingUp2FA && (
+              <div className="space-y-4 border border-cyan-500/20 bg-slate-950 p-4 rounded-xl text-xs">
+                <p className="font-bold text-cyan-400">Step 1: Scan URI or enter Secret Key in Authenticator App</p>
+                <div className="p-3 bg-slate-900 rounded-lg font-mono text-cyan-300 select-all break-all border border-slate-800">
+                  Secret Key: {totpSecret}
+                </div>
+                <div className="p-2 bg-slate-900 rounded-lg font-mono text-slate-400 text-[11px] select-all break-all border border-slate-800">
+                  OTP URI: {otpURI}
+                </div>
+
+                <form onSubmit={handleVerify2FA} className="space-y-3 pt-2">
+                  <p className="font-bold text-white">Step 2: Enter 6-digit Verification Code</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={verifyCode}
+                      onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="123456"
+                      className="w-36 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-center text-cyan-400 text-sm focus:outline-none"
+                    />
+                    <button
+                      type="submit"
+                      disabled={verifyCode.length !== 6}
+                      className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold transition-all disabled:opacity-50"
+                    >
+                      Verify & Activate 2FA
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsSettingUp2FA(false)}
+                      className="px-3 py-2 text-slate-400 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {twoFactorEnabled && !isDisabling2FA && (
+              <div className="flex items-center justify-between text-xs">
+                <div>
+                  <p className="font-bold text-emerald-400">Two-Factor Authentication is Active</p>
+                  <p className="text-muted-theme">Your account is secured with TOTP authenticator protection.</p>
+                </div>
+                <button
+                  onClick={() => setIsDisabling2FA(true)}
+                  className="px-3.5 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold transition-all"
+                >
+                  Disable 2FA
+                </button>
+              </div>
+            )}
+
+            {isDisabling2FA && (
+              <form onSubmit={handleDisable2FA} className="space-y-3 border border-rose-500/20 bg-slate-950 p-4 rounded-xl text-xs">
+                <p className="font-bold text-rose-400">Confirm Disabling 2FA</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input
+                    type="password"
+                    value={disablePassword}
+                    onChange={(e) => setDisablePassword(e.target.value)}
+                    placeholder="Current Password"
+                    required
+                    className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white"
+                  />
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={disableCode}
+                    onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, ''))}
+                    placeholder="6-Digit 2FA Code"
+                    required
+                    className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 font-mono text-cyan-400 text-center"
+                  />
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-rose-500 text-white font-bold hover:bg-rose-600 transition-all"
+                  >
+                    Confirm Disable
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsDisabling2FA(false)}
+                    className="px-3 py-2 text-slate-400 hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
 
           {/* Security & Session Management */}

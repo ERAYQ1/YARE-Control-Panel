@@ -70,3 +70,31 @@ func ValidateToken(secret, tokenString string) (*Claims, error) {
 
 	return nil, errors.New("invalid token")
 }
+
+func GenerateTemp2FAToken(secret, userID, username, role string) (string, error) {
+	claims := Claims{
+		UserID:   userID,
+		Username: username,
+		Role:     role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Issuer:    "yare-panel-temp2fa",
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secret))
+}
+
+func ValidateTemp2FAToken(secret, tokenString string) (*Claims, error) {
+	claims, err := ValidateToken(secret, tokenString)
+	if err != nil {
+		return nil, err
+	}
+	if claims.Issuer != "yare-panel-temp2fa" {
+		return nil, errors.New("invalid 2fa session token")
+	}
+	return claims, nil
+}
+

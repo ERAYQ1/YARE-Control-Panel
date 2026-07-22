@@ -38,22 +38,24 @@ func hasHostRoot() bool {
 }
 
 func toRealPath(clientPath string) string {
-	clean := filepath.Clean(clientPath)
+	cleanedInput := filepath.Clean(clientPath)
+	if cleanedInput == "." || cleanedInput == "" {
+		cleanedInput = "/"
+	}
+
 	if !hasHostRoot() {
-		if clean == "" || clean == "." {
-			return "/"
+		if !filepath.IsAbs(cleanedInput) {
+			cleanedInput = "/" + strings.TrimLeft(cleanedInput, `/\`)
 		}
-		return clean
+		return filepath.Clean(cleanedInput)
 	}
 
-	if strings.HasPrefix(clean, "/hostroot") {
-		return clean
-	}
-
-	if clean == "/" || clean == "." || clean == "" {
+	relPath := strings.TrimPrefix(cleanedInput, "/hostroot")
+	target := filepath.Clean(filepath.Join("/hostroot", relPath))
+	if !strings.HasPrefix(target, "/hostroot") {
 		return "/hostroot"
 	}
-	return filepath.Join("/hostroot", clean)
+	return target
 }
 
 func toClientPath(realPath string) string {

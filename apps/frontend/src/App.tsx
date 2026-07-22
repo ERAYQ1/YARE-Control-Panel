@@ -4,6 +4,7 @@ import { Header } from './components/layout/Header';
 import { CommandPalette } from './components/ui/CommandPalette';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { ToastContainer, ToastMessage } from './components/ui/Toast';
+import { ForcePasswordModal } from './components/ui/ForcePasswordModal';
 import { Login } from './views/Login';
 import { Dashboard } from './views/Dashboard';
 import { System } from './views/System';
@@ -49,11 +50,13 @@ export function App() {
     setCurrentUser(user);
     localStorage.setItem('yare_user', JSON.stringify(user));
     addToast('success', 'Authenticated Successfully', `Welcome back, ${user.username}!`);
-    if (user.mustChangePassword) {
-      setTimeout(() => {
-        addToast('warning', 'Security Alert', 'Default admin password in use! Please update your password in Settings.');
-      }, 600);
-    }
+  };
+
+  const handlePasswordChangeSuccess = () => {
+    const updatedUser = { ...currentUser, mustChangePassword: false };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('yare_user', JSON.stringify(updatedUser));
+    addToast('success', 'Password Updated', 'Your password has been changed successfully!');
   };
 
   const handleLogout = () => {
@@ -87,6 +90,11 @@ export function App() {
 
   return (
     <div className="flex min-h-screen bg-app-theme text-primary-theme font-sans transition-colors duration-200">
+      {/* Mandatory Password Change Overlay Modal */}
+      {currentUser?.mustChangePassword && (
+        <ForcePasswordModal onSuccess={handlePasswordChangeSuccess} />
+      )}
+
       {/* Navigation Sidebar */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} hostname="yare-server" />
 

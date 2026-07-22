@@ -7,7 +7,9 @@ import {
   Sun,
   Terminal,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  CheckCircle,
+  ShieldCheck
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -25,6 +27,7 @@ export function Header({ onOpenTerminal, onOpenSearch, onLogout, userRole = 'adm
   });
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -54,7 +57,7 @@ export function Header({ onOpenTerminal, onOpenSearch, onLogout, userRole = 'adm
       <div className="flex items-center gap-3">
         <button
           onClick={onOpenSearch}
-          className="relative min-w-[280px] flex items-center rounded-md border border-theme bg-surface-theme px-3 py-1.5 text-xs text-muted-theme hover:border-subtle-theme hover:text-secondary-theme transition-colors text-left"
+          className="relative min-w-[280px] flex items-center rounded-md border border-theme bg-surface-theme px-3 py-1.5 text-xs text-muted-theme hover:border-border-subtle hover:text-secondary-theme transition-colors text-left"
         >
           <Search className="h-3.5 w-3.5 mr-2 text-muted-theme" />
           <span className="flex-1 text-[11px]">{t('searchPlaceholder')}</span>
@@ -113,15 +116,48 @@ export function Header({ onOpenTerminal, onOpenSearch, onLogout, userRole = 'adm
           {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-500" />}
         </button>
 
-        <button className="rounded-md border border-theme bg-surface-theme p-1.5 text-secondary-theme hover:text-primary-theme hover:bg-card-theme transition-colors">
-          <Bell className="h-4 w-4" />
-        </button>
+        {/* Notifications Popover */}
+        <div className="relative">
+          <button
+            onClick={() => setNotificationsOpen(!notificationsOpen)}
+            className="rounded-md border border-theme bg-surface-theme p-1.5 text-secondary-theme hover:text-primary-theme hover:bg-card-theme transition-colors relative"
+            title="System Notifications"
+          >
+            <Bell className="h-4 w-4" />
+            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+          </button>
+
+          {notificationsOpen && (
+            <div className="absolute right-0 mt-1.5 w-72 rounded-xl border border-theme bg-surface-theme p-3 shadow-2xl z-50 space-y-2">
+              <div className="flex items-center justify-between border-b border-theme pb-2 text-xs font-bold text-primary-theme">
+                <span>System Notifications</span>
+                <span className="text-[10px] text-cyan-400 font-mono">Live</span>
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="p-2 rounded-lg bg-card-theme border border-theme flex items-start gap-2">
+                  <ShieldCheck className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-primary-theme text-[11px]">YARE OS Engine Active</p>
+                    <p className="text-[10px] text-muted-theme">System telemetry and security monitor operating normally.</p>
+                  </div>
+                </div>
+                <div className="p-2 rounded-lg bg-card-theme border border-theme flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-primary-theme text-[11px]">Automated Cron Scheduler</p>
+                    <p className="text-[10px] text-muted-theme">Background worker polling scheduled system tasks.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* User Profile */}
         <div className="relative ml-1">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2 rounded-md border border-theme bg-surface-theme px-2.5 py-1 text-xs font-medium text-primary-theme hover:border-subtle-theme transition-colors"
+            className="flex items-center gap-2 rounded-md border border-theme bg-surface-theme px-2.5 py-1 text-xs font-medium text-primary-theme hover:border-border-subtle transition-colors"
           >
             <div className="h-5 w-5 rounded-full bg-card-theme flex items-center justify-center font-mono font-bold text-[10px] text-primary-theme border border-theme">
               {username[0].toUpperCase()}
