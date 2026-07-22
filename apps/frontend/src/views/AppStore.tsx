@@ -6,7 +6,6 @@ import {
   Search,
   Github,
   Download,
-  CheckCircle,
   ExternalLink,
   Plus,
   RefreshCw,
@@ -19,8 +18,6 @@ import {
   Layers,
   Sparkles,
   ShieldCheck,
-  Cpu,
-  Globe,
   X
 } from 'lucide-react';
 
@@ -110,11 +107,14 @@ export function AppStore() {
     setLoadingSearch(true);
     try {
       const res = await api.get(`/appstore/github/search?q=${encodeURIComponent(searchQuery)}`);
-      if (res.data && res.data.items) {
+      if (res.data && Array.isArray(res.data.items)) {
         setGithubRepos(res.data.items);
+      } else {
+        setGithubRepos([]);
       }
     } catch (err) {
       showToast('Failed to query GitHub Search API', 'error');
+      setGithubRepos([]);
     } finally {
       setLoadingSearch(false);
     }
@@ -125,10 +125,10 @@ export function AppStore() {
     setInspecting(true);
     try {
       const res = await api.post('/appstore/github/inspect', { repoUrl: importRepoUrl });
-      const data = res.data;
+      const data = res.data || {};
       setSelectedDeployApp({
-        name: data.name,
-        repoUrl: data.repoUrl,
+        name: data.name || 'Custom App',
+        repoUrl: data.repoUrl || importRepoUrl,
         category: 'GitHub Import',
         description: data.description || 'Imported GitHub Repository',
         icon: '📦',
@@ -164,7 +164,7 @@ export function AppStore() {
 
     try {
       const res = await api.post('/appstore/deploy', selectedDeployApp);
-      setDeployLogs(prev => prev + (res.data.logs || '') + '\nDeployment Completed Successfully!');
+      setDeployLogs(prev => prev + (res.data?.logs || '') + '\nDeployment Completed Successfully!');
       showToast(`Deployed ${selectedDeployApp.name} successfully!`, 'success');
       fetchInstalledApps();
       setTimeout(() => {
@@ -195,7 +195,7 @@ export function AppStore() {
     setLoadingLogs(true);
     try {
       const res = await api.get(`/appstore/installed/${app.id}/logs`);
-      setAppLogsContent(res.data.logs || 'No logs available.');
+      setAppLogsContent(res.data?.logs || 'No logs available.');
     } catch (err) {
       setAppLogsContent('Failed to load container logs.');
     } finally {
@@ -207,9 +207,10 @@ export function AppStore() {
 
   const safeCuratedApps = Array.isArray(curatedApps) ? curatedApps : [];
   const safeInstalledApps = Array.isArray(installedApps) ? installedApps : [];
+  const safeGithubRepos = Array.isArray(githubRepos) ? githubRepos : [];
 
   const filteredCurated = safeCuratedApps.filter(
-    app => selectedCategory === 'All' || app.category.toLowerCase() === selectedCategory.toLowerCase()
+    app => selectedCategory === 'All' || (app?.category || '').toLowerCase() === selectedCategory.toLowerCase()
   );
 
   return (
@@ -231,27 +232,27 @@ export function AppStore() {
       )}
 
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 shadow-lg">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-surface-theme border border-theme shadow-sm">
         <div>
-          <h2 className="text-lg font-extrabold text-white flex items-center gap-2.5">
+          <h2 className="text-lg font-extrabold text-primary-theme flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
               <Package className="h-5 w-5" />
             </div>
-            GitHub App Store & Container Deployer
+            App Store & Container Manager
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-muted-theme mt-1">
             Discover open-source GitHub repositories, launch 1-click Docker stacks, and manage self-hosted applications.
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-1 bg-card-theme p-1 rounded-xl border border-theme">
           <button
             onClick={() => setActiveTab('curated')}
             className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
               activeTab === 'curated'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-sm'
+                : 'text-muted-theme hover:text-primary-theme'
             }`}
           >
             <Sparkles className="h-3.5 w-3.5" /> Stacks Catalog
@@ -259,12 +260,12 @@ export function AppStore() {
           <button
             onClick={() => {
               setActiveTab('search');
-              if (githubRepos.length === 0) handleGitHubSearch();
+              if (safeGithubRepos.length === 0) handleGitHubSearch();
             }}
             className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
               activeTab === 'search'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-sm'
+                : 'text-muted-theme hover:text-primary-theme'
             }`}
           >
             <Github className="h-3.5 w-3.5" /> GitHub Search
@@ -273,8 +274,8 @@ export function AppStore() {
             onClick={() => setActiveTab('import')}
             className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
               activeTab === 'import'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-sm'
+                : 'text-muted-theme hover:text-primary-theme'
             }`}
           >
             <Plus className="h-3.5 w-3.5" /> Import Repo
@@ -286,8 +287,8 @@ export function AppStore() {
             }}
             className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 relative ${
               activeTab === 'installed'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-sm'
+                : 'text-muted-theme hover:text-primary-theme'
             }`}
           >
             <Layers className="h-3.5 w-3.5" /> Installed Apps
@@ -311,8 +312,8 @@ export function AppStore() {
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap border ${
                   selectedCategory === cat
-                    ? 'bg-slate-800 text-cyan-400 border-cyan-500/40 shadow-sm'
-                    : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
+                    ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40 shadow-sm'
+                    : 'bg-card-theme text-muted-theme border-theme hover:text-primary-theme hover:bg-hover-theme'
                 }`}
               >
                 {cat}
@@ -323,7 +324,7 @@ export function AppStore() {
           {loadingCurated ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="h-44 rounded-2xl bg-slate-900/40 border border-slate-800 animate-pulse p-4" />
+                <div key={i} className="h-44 rounded-2xl bg-card-theme border border-theme animate-pulse p-4" />
               ))}
             </div>
           ) : (
@@ -331,44 +332,44 @@ export function AppStore() {
               {filteredCurated.map(app => (
                 <div
                   key={app.id}
-                  className="group rounded-2xl border border-slate-800/80 bg-slate-900/50 hover:bg-slate-900/80 p-5 flex flex-col justify-between space-y-4 hover:border-slate-700 transition-all duration-200 shadow-md hover:shadow-xl hover:shadow-cyan-950/10"
+                  className="group rounded-2xl border border-theme bg-surface-theme hover:bg-card-theme p-5 flex flex-col justify-between space-y-4 hover:border-border-subtle transition-all duration-200 shadow-sm hover:shadow-md"
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-3xl p-2 rounded-xl bg-slate-950/80 border border-slate-800 group-hover:scale-105 transition-transform">
-                        {app.icon}
+                      <span className="text-3xl p-2 rounded-xl bg-card-theme border border-theme group-hover:scale-105 transition-transform">
+                        {app.icon || '📦'}
                       </span>
                       <div className="flex items-center gap-1.5">
                         <span className="flex items-center gap-1 text-[11px] font-bold text-amber-400 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                          <Star className="h-3 w-3 fill-amber-400" /> {app.stars.toLocaleString()}
+                          <Star className="h-3 w-3 fill-amber-400" /> {(app.stars || 0).toLocaleString()}
                         </span>
-                        <span className="text-[10px] uppercase font-extrabold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                        <span className="text-[10px] uppercase font-extrabold px-2.5 py-0.5 rounded-full bg-card-theme text-secondary-theme border border-theme">
                           {app.category}
                         </span>
                       </div>
                     </div>
 
                     <div>
-                      <h3 className="font-bold text-white text-base group-hover:text-cyan-300 transition-colors flex items-center justify-between">
+                      <h3 className="font-bold text-primary-theme text-base group-hover:text-cyan-400 transition-colors flex items-center justify-between">
                         {app.name}
                         {app.repoUrl && (
                           <a
                             href={app.repoUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-slate-500 hover:text-slate-300 p-1"
+                            className="text-muted-theme hover:text-primary-theme p-1"
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
                           </a>
                         )}
                       </h3>
-                      <p className="text-xs text-slate-400 leading-relaxed mt-1 line-clamp-2">{app.description}</p>
+                      <p className="text-xs text-secondary-theme leading-relaxed mt-1 line-clamp-2">{app.description}</p>
                     </div>
 
                     {/* Tag badges */}
                     <div className="flex flex-wrap gap-1.5 pt-1">
-                      {app.tags.map(tag => (
-                        <span key={tag} className="text-[10px] text-slate-400 bg-slate-950/60 px-2 py-0.5 rounded border border-slate-800">
+                      {Array.isArray(app.tags) && app.tags.map(tag => (
+                        <span key={tag} className="text-[10px] text-muted-theme bg-card-theme px-2 py-0.5 rounded border border-theme">
                           #{tag}
                         </span>
                       ))}
@@ -388,7 +389,7 @@ export function AppStore() {
                         envVars: app.envVars,
                       })
                     }
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-cyan-600 border border-slate-700 hover:border-cyan-500 text-xs font-bold text-slate-200 hover:text-white transition-all shadow-sm"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-card-theme hover:bg-cyan-500 hover:text-slate-950 border border-theme text-xs font-bold text-primary-theme transition-all shadow-sm"
                   >
                     <Download className="h-3.5 w-3.5" /> 1-Click Deploy Stack
                   </button>
@@ -404,19 +405,19 @@ export function AppStore() {
         <div className="space-y-5">
           <form onSubmit={handleGitHubSearch} className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3.5 top-3 h-4 w-4 text-muted-theme" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search GitHub repos (e.g. topic:self-hosted, docker, monitoring)..."
-                className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
+                className="w-full bg-card-theme border border-theme rounded-xl pl-10 pr-4 py-2.5 text-xs text-primary-theme placeholder-muted-theme focus:outline-none focus:border-cyan-500"
               />
             </div>
             <button
               type="submit"
               disabled={loadingSearch}
-              className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 disabled:opacity-50"
+              className="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold text-xs rounded-xl transition-all flex items-center gap-2 disabled:opacity-50"
             >
               {loadingSearch ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
               Search GitHub
@@ -426,52 +427,54 @@ export function AppStore() {
           {loadingSearch ? (
             <div className="space-y-3">
               {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-24 rounded-xl bg-slate-900/40 border border-slate-800 animate-pulse" />
+                <div key={i} className="h-24 rounded-xl bg-card-theme border border-theme animate-pulse" />
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {githubRepos.map(repo => (
+              {safeGithubRepos.map(repo => (
                 <div
                   key={repo.id}
-                  className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-3 flex flex-col justify-between hover:border-slate-700 transition-all"
+                  className="rounded-2xl border border-theme bg-surface-theme p-4 space-y-3 flex flex-col justify-between hover:border-border-subtle transition-all"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <img src={repo.owner.avatar_url} alt={repo.owner.login} className="h-7 w-7 rounded-full border border-slate-700" />
+                        {repo.owner?.avatar_url && (
+                          <img src={repo.owner.avatar_url} alt={repo.owner?.login || ''} className="h-7 w-7 rounded-full border border-theme" />
+                        )}
                         <div>
                           <a
                             href={repo.html_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="font-bold text-white text-xs hover:text-cyan-400 flex items-center gap-1"
+                            className="font-bold text-primary-theme text-xs hover:text-cyan-400 flex items-center gap-1"
                           >
-                            {repo.full_name} <ExternalLink className="h-3 w-3 text-slate-500" />
+                            {repo.full_name} <ExternalLink className="h-3 w-3 text-muted-theme" />
                           </a>
-                          <p className="text-[10px] text-slate-400">By {repo.owner.login}</p>
+                          <p className="text-[10px] text-muted-theme">By {repo.owner?.login || 'Unknown'}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-[11px] font-bold text-amber-400">
                         <span className="flex items-center gap-1">
-                          <Star className="h-3 w-3 fill-amber-400" /> {repo.stargazers_count}
+                          <Star className="h-3 w-3 fill-amber-400" /> {(repo.stargazers_count || 0).toLocaleString()}
                         </span>
-                        <span className="flex items-center gap-1 text-slate-400">
-                          <GitFork className="h-3 w-3" /> {repo.forks_count}
+                        <span className="flex items-center gap-1 text-muted-theme">
+                          <GitFork className="h-3 w-3" /> {(repo.forks_count || 0).toLocaleString()}
                         </span>
                       </div>
                     </div>
 
-                    <p className="text-xs text-slate-300 leading-relaxed line-clamp-2">{repo.description || 'No description provided.'}</p>
+                    <p className="text-xs text-secondary-theme leading-relaxed line-clamp-2">{repo.description || 'No description provided.'}</p>
 
                     <div className="flex items-center gap-2 pt-1">
                       {repo.language && (
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-card-theme text-secondary-theme border border-theme">
                           {repo.language}
                         </span>
                       )}
-                      {repo.topics && repo.topics.slice(0, 3).map(t => (
-                        <span key={t} className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800">
+                      {Array.isArray(repo.topics) && repo.topics.slice(0, 3).map(t => (
+                        <span key={t} className="text-[10px] font-mono px-2 py-0.5 rounded bg-card-theme text-muted-theme border border-theme">
                           {t}
                         </span>
                       ))}
@@ -486,12 +489,12 @@ export function AppStore() {
                         category: 'GitHub Search',
                         description: repo.description,
                         icon: '📦',
-                        dockerImage: `${repo.owner.login}/${repo.name}:latest`,
+                        dockerImage: `${repo.owner?.login || 'library'}/${repo.name}:latest`,
                         port: '8080',
                         envVars: 'PORT=8080',
                       })
                     }
-                    className="w-full py-2 rounded-xl bg-slate-800 hover:bg-cyan-600 border border-slate-700 text-xs font-bold text-slate-200 hover:text-white transition-all flex items-center justify-center gap-1.5"
+                    className="w-full py-2 rounded-xl bg-card-theme hover:bg-cyan-500 hover:text-slate-950 border border-theme text-xs font-bold text-primary-theme transition-all flex items-center justify-center gap-1.5"
                   >
                     <Download className="h-3.5 w-3.5" /> Deploy Repo Container
                   </button>
@@ -504,40 +507,40 @@ export function AppStore() {
 
       {/* TAB 3: CUSTOM GITHUB IMPORTER */}
       {activeTab === 'import' && (
-        <div className="max-w-2xl mx-auto rounded-2xl border border-slate-800 bg-slate-900/60 p-6 space-y-5 shadow-xl">
+        <div className="max-w-2xl mx-auto rounded-2xl border border-theme bg-surface-theme p-6 space-y-5 shadow-xl">
           <div>
-            <h3 className="font-bold text-white text-base flex items-center gap-2">
+            <h3 className="font-bold text-primary-theme text-base flex items-center gap-2">
               <Github className="h-5 w-5 text-cyan-400" /> Custom GitHub Repository Deployer
             </h3>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-muted-theme mt-1">
               Enter any public GitHub repository URL to inspect its configuration and spin up a container stack.
             </p>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-300 uppercase">GitHub Repository URL</label>
+            <label className="text-xs font-bold text-secondary-theme uppercase">GitHub Repository URL</label>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={importRepoUrl}
                 onChange={e => setImportRepoUrl(e.target.value)}
                 placeholder="https://github.com/louislam/uptime-kuma"
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+                className="flex-1 bg-card-theme border border-theme rounded-xl px-4 py-2.5 text-xs text-primary-theme focus:outline-none focus:border-cyan-500"
               />
               <button
                 onClick={handleInspectRepo}
                 disabled={inspecting || !importRepoUrl.trim()}
-                className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 disabled:opacity-50"
+                className="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold text-xs rounded-xl transition-all flex items-center gap-2 disabled:opacity-50"
               >
                 {inspecting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 Inspect Repo
               </button>
             </div>
-            <p className="text-[11px] text-slate-500">Supported formats: `https://github.com/owner/repo` or `owner/repo`</p>
+            <p className="text-[11px] text-muted-theme">Supported formats: `https://github.com/owner/repo` or `owner/repo`</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2 text-xs text-slate-400">
-            <p className="font-bold text-slate-300 flex items-center gap-1.5">
+          <div className="p-4 rounded-xl bg-card-theme border border-theme space-y-2 text-xs text-secondary-theme">
+            <p className="font-bold text-primary-theme flex items-center gap-1.5">
               <ShieldCheck className="h-4 w-4 text-emerald-400" /> Automatic Container Auto-Detection
             </p>
             <p>YARE Inspector checks GitHub metadata, release tags, default exposed ports, and generates your deployment manifest automatically.</p>
@@ -549,40 +552,40 @@ export function AppStore() {
       {activeTab === 'installed' && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-              <Layers className="h-4 w-4 text-cyan-400" /> Deployed GitHub Applications ({installedApps.length})
+            <h3 className="text-xs font-extrabold text-secondary-theme uppercase tracking-wider flex items-center gap-2">
+              <Layers className="h-4 w-4 text-cyan-400" /> Deployed GitHub Applications ({safeInstalledApps.length})
             </h3>
             <button
               onClick={fetchInstalledApps}
-              className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+              className="p-1.5 rounded-lg bg-card-theme border border-theme text-muted-theme hover:text-primary-theme"
             >
               <RefreshCw className={`h-4 w-4 ${loadingInstalled ? 'animate-spin' : ''}`} />
             </button>
           </div>
 
-          {installedApps.length === 0 ? (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center space-y-3">
-              <Package className="h-10 w-10 text-slate-600 mx-auto" />
-              <p className="font-bold text-slate-300 text-sm">No GitHub applications deployed yet.</p>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+          {safeInstalledApps.length === 0 ? (
+            <div className="rounded-2xl border border-theme bg-surface-theme p-12 text-center space-y-3">
+              <Package className="h-10 w-10 text-muted-theme mx-auto" />
+              <p className="font-bold text-primary-theme text-sm">No GitHub applications deployed yet.</p>
+              <p className="text-xs text-muted-theme max-w-sm mx-auto">
                 Explore the Stacks Catalog or search GitHub to launch your first application stack in seconds.
               </p>
               <button
                 onClick={() => setActiveTab('curated')}
-                className="px-4 py-2 bg-cyan-600 text-white rounded-xl font-bold text-xs hover:bg-cyan-500"
+                className="px-4 py-2 bg-cyan-500 text-slate-950 rounded-xl font-bold text-xs hover:bg-cyan-600"
               >
                 Browse Stacks Catalog
               </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {installedApps.map(app => (
-                <div key={app.id} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-4 shadow-lg">
+              {safeInstalledApps.map(app => (
+                <div key={app.id} className="rounded-2xl border border-theme bg-surface-theme p-5 space-y-4 shadow-sm">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-3xl p-2 rounded-xl bg-slate-950 border border-slate-800">{app.icon || '📦'}</span>
+                      <span className="text-3xl p-2 rounded-xl bg-card-theme border border-theme">{app.icon || '📦'}</span>
                       <div>
-                        <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                        <h4 className="font-bold text-primary-theme text-sm flex items-center gap-2">
                           {app.name}
                           {app.port && (
                             <a
@@ -595,7 +598,7 @@ export function AppStore() {
                             </a>
                           )}
                         </h4>
-                        <p className="text-[11px] text-slate-400 font-mono mt-0.5">{app.containerName}</p>
+                        <p className="text-[11px] text-muted-theme font-mono mt-0.5">{app.containerName}</p>
                       </div>
                     </div>
 
@@ -610,12 +613,12 @@ export function AppStore() {
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed">{app.description || 'Deployed GitHub Application Stack'}</p>
+                  <p className="text-xs text-secondary-theme leading-relaxed">{app.description || 'Deployed GitHub Application Stack'}</p>
 
-                  <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+                  <div className="pt-3 border-t border-theme flex items-center justify-between gap-2">
                     <button
                       onClick={() => handleOpenLogs(app)}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-card-theme hover:bg-hover-theme text-xs font-bold text-secondary-theme"
                     >
                       <Terminal className="h-3.5 w-3.5 text-cyan-400" /> View Logs
                     </button>
@@ -641,7 +644,7 @@ export function AppStore() {
 
                       <button
                         onClick={() => handleAppAction(app.id, 'restart')}
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs"
+                        className="p-1.5 rounded-lg bg-card-theme hover:bg-hover-theme text-secondary-theme text-xs border border-theme"
                         title="Restart Container"
                       >
                         <RefreshCw className="h-3.5 w-3.5" />
@@ -665,19 +668,19 @@ export function AppStore() {
 
       {/* MODAL 1: DEPLOYMENT CONFIGURATOR */}
       {selectedDeployApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-900 p-6 space-y-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-xl rounded-2xl border border-theme bg-surface-theme p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-theme pb-3">
               <div className="flex items-center gap-3">
                 <span className="text-3xl">{selectedDeployApp.icon || '📦'}</span>
                 <div>
-                  <h3 className="font-bold text-white text-base">Deploy {selectedDeployApp.name}</h3>
-                  <p className="text-xs text-slate-400">Configure port mapping and environment variables.</p>
+                  <h3 className="font-bold text-primary-theme text-base">Deploy {selectedDeployApp.name}</h3>
+                  <p className="text-xs text-muted-theme">Configure port mapping and environment variables.</p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedDeployApp(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white bg-slate-800"
+                className="p-1 rounded-lg text-muted-theme hover:text-primary-theme bg-card-theme"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -686,68 +689,68 @@ export function AppStore() {
             <div className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold text-slate-300 uppercase">App Name</label>
+                  <label className="font-bold text-secondary-theme uppercase">App Name</label>
                   <input
                     type="text"
                     value={selectedDeployApp.name}
                     onChange={e => setSelectedDeployApp({ ...selectedDeployApp, name: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white mt-1"
+                    className="w-full bg-card-theme border border-theme rounded-lg px-3 py-2 text-primary-theme mt-1"
                   />
                 </div>
                 <div>
-                  <label className="font-bold text-slate-300 uppercase">Exposed Port</label>
+                  <label className="font-bold text-secondary-theme uppercase">Exposed Port</label>
                   <input
                     type="text"
                     value={selectedDeployApp.port || ''}
                     onChange={e => setSelectedDeployApp({ ...selectedDeployApp, port: e.target.value })}
                     placeholder="e.g. 8080"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white mt-1"
+                    className="w-full bg-card-theme border border-theme rounded-lg px-3 py-2 text-primary-theme mt-1"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="font-bold text-slate-300 uppercase">Docker Image Target</label>
+                <label className="font-bold text-secondary-theme uppercase">Docker Image Target</label>
                 <input
                   type="text"
                   value={selectedDeployApp.dockerImage}
                   onChange={e => setSelectedDeployApp({ ...selectedDeployApp, dockerImage: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-cyan-300 font-mono mt-1"
+                  className="w-full bg-card-theme border border-theme rounded-lg px-3 py-2 text-cyan-400 font-mono mt-1"
                 />
               </div>
 
               <div>
-                <label className="font-bold text-slate-300 uppercase">Environment Variables (KEY=VALUE)</label>
+                <label className="font-bold text-secondary-theme uppercase">Environment Variables (KEY=VALUE)</label>
                 <textarea
                   rows={4}
                   value={selectedDeployApp.envVars || ''}
                   onChange={e => setSelectedDeployApp({ ...selectedDeployApp, envVars: e.target.value })}
                   placeholder="PORT=8080&#10;NODE_ENV=production"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-mono mt-1"
+                  className="w-full bg-card-theme border border-theme rounded-lg px-3 py-2 text-primary-theme font-mono mt-1"
                 />
               </div>
 
               {deployLogs && (
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-400 uppercase text-[10px]">Deployment Console Output</label>
-                  <pre className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 font-mono text-[11px] max-h-36 overflow-y-auto whitespace-pre-wrap">
+                  <label className="font-bold text-muted-theme uppercase text-[10px]">Deployment Console Output</label>
+                  <pre className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-emerald-400 font-mono text-[11px] max-h-36 overflow-y-auto whitespace-pre-wrap">
                     {deployLogs}
                   </pre>
                 </div>
               )}
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+            <div className="flex justify-end gap-2 pt-2 border-t border-theme">
               <button
                 onClick={() => setSelectedDeployApp(null)}
-                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white text-xs font-bold"
+                className="px-4 py-2 rounded-xl bg-card-theme text-secondary-theme hover:text-primary-theme text-xs font-bold"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmDeploy}
                 disabled={deploying}
-                className="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-cyan-950/30"
+                className="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-slate-950 text-xs font-bold flex items-center gap-2 disabled:opacity-50 shadow-md"
               >
                 {deploying ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                 Confirm & Launch Stack
@@ -759,25 +762,25 @@ export function AppStore() {
 
       {/* MODAL 2: CONTAINER LOGS VIEWER */}
       {viewingLogsApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-3xl rounded-2xl border border-slate-800 bg-slate-900 p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-3xl rounded-2xl border border-theme bg-surface-theme p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-theme pb-3">
               <div className="flex items-center gap-2">
                 <Terminal className="h-5 w-5 text-cyan-400" />
                 <div>
-                  <h3 className="font-bold text-white text-sm">Container Logs: {viewingLogsApp.name}</h3>
-                  <p className="text-[11px] text-slate-400 font-mono">{viewingLogsApp.containerName}</p>
+                  <h3 className="font-bold text-primary-theme text-sm">Container Logs: {viewingLogsApp.name}</h3>
+                  <p className="text-[11px] text-muted-theme font-mono">{viewingLogsApp.containerName}</p>
                 </div>
               </div>
               <button
                 onClick={() => setViewingLogsApp(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white bg-slate-800"
+                className="p-1 rounded-lg text-muted-theme hover:text-primary-theme bg-card-theme"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="relative bg-slate-950 rounded-xl border border-slate-800 p-4 h-80 overflow-y-auto font-mono text-xs text-slate-300">
+            <div className="relative bg-slate-950 rounded-xl border border-slate-900 p-4 h-80 overflow-y-auto font-mono text-xs text-emerald-400">
               {loadingLogs ? (
                 <div className="flex items-center justify-center h-full gap-2 text-slate-500">
                   <RefreshCw className="h-4 w-4 animate-spin" /> Fetching container telemetry logs...
@@ -790,7 +793,7 @@ export function AppStore() {
             <div className="flex justify-end pt-1">
               <button
                 onClick={() => setViewingLogsApp(null)}
-                className="px-4 py-2 bg-slate-800 text-slate-200 rounded-xl text-xs font-bold hover:bg-slate-700"
+                className="px-4 py-2 bg-card-theme text-primary-theme rounded-xl text-xs font-bold hover:bg-hover-theme"
               >
                 Close Logs
               </button>
