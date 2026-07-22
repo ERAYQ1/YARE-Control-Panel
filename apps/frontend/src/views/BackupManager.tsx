@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Archive, Plus, Trash2, Download, RefreshCw, HardDrive } from 'lucide-react';
+import { Archive, Plus, Trash2, Download, RefreshCw, HardDrive, Inbox, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 interface BackupItem {
@@ -32,10 +32,13 @@ export const BackupManagerView: React.FC = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        setBackups(data.backups || []);
+        setBackups(Array.isArray(data?.backups) ? data.backups : Array.isArray(data) ? data : []);
+      } else {
+        setBackups([]);
       }
     } catch (e) {
       console.error(e);
+      setBackups([]);
     } finally {
       setLoading(false);
     }
@@ -96,82 +99,92 @@ export const BackupManagerView: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const safeBackups = Array.isArray(backups) ? backups : [];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
-            <Archive className="w-6 h-6 text-emerald-400" />
+          <h1 className="text-2xl font-bold text-primary-theme flex items-center gap-2">
+            <Archive className="w-6 h-6 text-cyan-400" />
             {t('backups')}
           </h1>
-          <p className="text-sm text-zinc-400 mt-1">
-            Create compressed system snapshots and automated scheduled backups.
+          <p className="text-sm text-muted-theme mt-1">
+            Automated database & application directory backups with local storage tracking.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={fetchBackups}
-            className="p-2 text-zinc-400 hover:text-zinc-200 bg-zinc-900 border border-zinc-800 rounded-lg"
+            className="p-2 text-muted-theme hover:text-primary-theme bg-card-theme border border-theme rounded-lg"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg"
+            className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition"
           >
             <Plus className="w-4 h-4" />
-            Create Instant Backup
+            Create Backup Snapshot
           </button>
         </div>
       </div>
 
-      <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl overflow-hidden">
+      <div className="bg-surface-theme border border-theme rounded-2xl overflow-hidden shadow-sm">
         {loading ? (
-          <div className="p-8 text-center text-zinc-500">Loading backups...</div>
-        ) : backups.length === 0 ? (
-          <div className="p-12 text-center text-zinc-500">
-            <HardDrive className="w-12 h-12 mx-auto mb-3 text-zinc-700" />
-            <p>No backups generated yet.</p>
+          <div className="p-12 text-center text-muted-theme font-mono text-xs flex items-center justify-center gap-2">
+            <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" /> Fetching backup archives...
+          </div>
+        ) : safeBackups.length === 0 ? (
+          <div className="p-12 text-center text-muted-theme space-y-2">
+            <Inbox className="w-10 h-10 mx-auto opacity-40" />
+            <p className="text-xs">No backup snapshots found in storage.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-zinc-300">
-              <thead className="bg-zinc-950/80 text-zinc-400 uppercase text-xs border-b border-zinc-800">
+            <table className="w-full text-left text-xs text-secondary-theme">
+              <thead className="bg-card-theme text-muted-theme uppercase text-[10px] border-b border-theme font-bold">
                 <tr>
-                  <th className="px-6 py-3">Backup Name</th>
-                  <th className="px-6 py-3">Type</th>
-                  <th className="px-6 py-3">Target Path</th>
-                  <th className="px-6 py-3">Size</th>
-                  <th className="px-6 py-3">Date</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3">Snapshot Name</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Source Directory</th>
+                  <th className="px-4 py-3">File Size</th>
+                  <th className="px-4 py-3">Created At</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/60">
-                {backups.map((b) => (
-                  <tr key={b.id} className="hover:bg-zinc-800/30 transition">
-                    <td className="px-6 py-4 font-medium text-zinc-100">{b.name}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-0.5 rounded text-xs bg-zinc-800 text-emerald-400 border border-zinc-700">
+              <tbody className="divide-y divide-theme font-mono">
+                {safeBackups.map((b) => (
+                  <tr key={b.id} className="hover:bg-hover-theme transition">
+                    <td className="px-4 py-3 font-bold text-primary-theme flex items-center gap-2">
+                      <HardDrive className="w-4 h-4 text-cyan-400" />
+                      {b.name}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
                         {b.backup_type}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-mono text-zinc-400 text-xs">{b.target_path}</td>
-                    <td className="px-6 py-4 font-mono text-xs text-zinc-300">{formatSize(b.size_bytes)}</td>
-                    <td className="px-6 py-4 text-xs text-zinc-500">{b.created_at}</td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleDownload(b.id)}
-                        className="p-1.5 text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 rounded"
-                        title="Download Backup Tar.gz"
-                      >
-                        <Download className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(b.id)}
-                        className="p-1.5 text-red-400 hover:text-red-300 bg-red-500/10 rounded"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <td className="px-4 py-3 text-muted-theme">{b.target_path}</td>
+                    <td className="px-4 py-3 text-emerald-400 font-bold">{formatSize(b.size_bytes)}</td>
+                    <td className="px-4 py-3 text-muted-theme">{b.created_at}</td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleDownload(b.id)}
+                          className="p-1.5 rounded-lg bg-card-theme hover:bg-hover-theme text-cyan-400 border border-theme"
+                          title="Download Snapshot"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(b.id)}
+                          className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20"
+                          title="Delete Snapshot"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -181,56 +194,67 @@ export const BackupManagerView: React.FC = () => {
         )}
       </div>
 
+      {/* Modal: Create Backup */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-full max-w-md space-y-4">
-            <h2 className="text-lg font-bold text-zinc-100">Create New System Backup</h2>
-            <form onSubmit={handleCreateBackup} className="space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
+          <div className="w-full max-w-md bg-surface-theme border border-theme rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-theme pb-3">
+              <h3 className="text-sm font-bold text-primary-theme flex items-center gap-2">
+                <Archive className="w-4 h-4 text-cyan-400" /> Create Backup Snapshot
+              </h3>
+              <button onClick={() => setShowAddModal(false)} className="text-muted-theme hover:text-primary-theme">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateBackup} className="space-y-4 text-xs">
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1">Backup Name</label>
+                <label className="block text-muted-theme font-semibold mb-1">Snapshot Label</label>
                 <input
                   type="text"
-                  placeholder="System_Full_Snapshot"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Daily DB Backup"
                   required
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100"
+                  className="w-full bg-card-theme border border-theme rounded-xl px-3 py-2 text-primary-theme"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1">Backup Type</label>
+                <label className="block text-muted-theme font-semibold mb-1">Backup Scope</label>
                 <select
                   value={backupType}
                   onChange={(e) => setBackupType(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100"
+                  className="w-full bg-card-theme border border-theme rounded-xl px-3 py-2 text-primary-theme"
                 >
-                  <option value="full">Full YARE System & DB</option>
-                  <option value="db">SQLite Database Only</option>
-                  <option value="files">Custom Directory</option>
+                  <option value="full">Full Backup (System + DB + Config)</option>
+                  <option value="database">Database Only (SQLite Snapshot)</option>
+                  <option value="files">Filesystem Directory Only</option>
                 </select>
               </div>
-              {backupType === 'files' && (
-                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Directory Path</label>
-                  <input
-                    type="text"
-                    value={sourceDir}
-                    onChange={(e) => setSourceDir(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 font-mono"
-                  />
-                </div>
-              )}
-              <div className="flex justify-end gap-3 pt-2">
+
+              <div>
+                <label className="block text-muted-theme font-semibold mb-1">Target Directory Path</label>
+                <input
+                  type="text"
+                  value={sourceDir}
+                  onChange={(e) => setSourceDir(e.target.value)}
+                  required
+                  className="w-full bg-card-theme border border-theme rounded-xl px-3 py-2 font-mono text-primary-theme"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 text-sm text-zinc-400"
+                  className="px-4 py-2 rounded-xl text-muted-theme hover:bg-hover-theme"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg"
+                  className="px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold hover:bg-cyan-600"
                 >
                   Start Backup
                 </button>

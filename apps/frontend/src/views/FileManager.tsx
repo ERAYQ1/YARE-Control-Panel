@@ -4,22 +4,20 @@ import { FileItem } from '@yare/types';
 import { formatBytes } from '@yare/utils';
 import {
   Folder,
-  FileText,
   FileCode,
   FileImage,
-  Upload,
   FolderPlus,
   FilePlus,
   Trash2,
   Edit3,
-  Archive,
-  Download,
   ChevronRight,
   Shield,
   X,
   Save,
   Grid,
-  List
+  List,
+  RefreshCw,
+  Inbox
 } from 'lucide-react';
 
 export function FileManager() {
@@ -42,8 +40,8 @@ export function FileManager() {
     setIsLoading(true);
     api.get(`/files/list?path=${encodeURIComponent(path)}`)
       .then((res) => {
-        setCurrentPath(res.data.currentPath);
-        setItems(res.data.items);
+        setCurrentPath(res.data?.currentPath || path);
+        setItems(Array.isArray(res.data?.items) ? res.data.items : []);
       })
       .catch(() => {
         setItems([]);
@@ -59,7 +57,7 @@ export function FileManager() {
     setEditingFilePath(item.path);
     api.get(`/files/content?path=${encodeURIComponent(item.path)}`)
       .then((res) => {
-        setFileContent(res.data.content);
+        setFileContent(res.data?.content || '');
         setEditorOpen(true);
       })
       .catch(() => {
@@ -93,18 +91,18 @@ export function FileManager() {
     }
   };
 
-  // Breadcrumbs path rendering
   const pathParts = currentPath.split('/').filter(Boolean);
+  const safeItems = Array.isArray(items) ? items : [];
 
   return (
     <div className="space-y-6">
       {/* Top Toolbar */}
-      <div className="glass-panel rounded-2xl border border-slate-800 bg-slate-900/60 p-4 flex flex-wrap items-center justify-between gap-4">
+      <div className="rounded-2xl border border-theme bg-surface-theme p-4 flex flex-wrap items-center justify-between gap-4 shadow-sm">
         {/* Breadcrumb Navigation */}
         <div className="flex items-center gap-1.5 text-xs font-semibold overflow-x-auto py-1">
           <button
             onClick={() => setCurrentPath('/')}
-            className="text-cyan-400 hover:underline px-1.5 py-1 rounded hover:bg-slate-800"
+            className="text-cyan-400 hover:underline px-1.5 py-1 rounded hover:bg-hover-theme"
           >
             root
           </button>
@@ -112,10 +110,10 @@ export function FileManager() {
             const subPath = '/' + pathParts.slice(0, idx + 1).join('/');
             return (
               <React.Fragment key={idx}>
-                <ChevronRight className="h-3.5 w-3.5 text-slate-500" />
+                <ChevronRight className="h-3.5 w-3.5 text-muted-theme" />
                 <button
                   onClick={() => setCurrentPath(subPath)}
-                  className="text-slate-200 hover:text-white px-1.5 py-1 rounded hover:bg-slate-800"
+                  className="text-primary-theme hover:text-cyan-400 px-1.5 py-1 rounded hover:bg-hover-theme"
                 >
                   {part}
                 </button>
@@ -134,7 +132,7 @@ export function FileManager() {
                   .then(() => fetchFiles(currentPath));
               }
             }}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-slate-700 transition-all"
+            className="flex items-center gap-1.5 rounded-xl border border-theme bg-card-theme px-3 py-1.5 text-xs font-semibold text-primary-theme hover:bg-hover-theme transition-all"
           >
             <FolderPlus className="h-3.5 w-3.5 text-cyan-400" /> New Folder
           </button>
@@ -147,22 +145,22 @@ export function FileManager() {
                   .then(() => fetchFiles(currentPath));
               }
             }}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-slate-700 transition-all"
+            className="flex items-center gap-1.5 rounded-xl border border-theme bg-card-theme px-3 py-1.5 text-xs font-semibold text-primary-theme hover:bg-hover-theme transition-all"
           >
             <FilePlus className="h-3.5 w-3.5 text-indigo-400" /> New File
           </button>
 
-          <div className="h-5 w-px bg-slate-800 mx-1" />
+          <div className="h-5 w-px bg-theme mx-1" />
 
           <button
             onClick={() => setViewMode('list')}
-            className={`p-1.5 rounded-lg ${viewMode === 'list' ? 'bg-cyan-500/20 text-cyan-400' : 'text-slate-400 hover:bg-slate-800'}`}
+            className={`p-1.5 rounded-lg ${viewMode === 'list' ? 'bg-cyan-500/20 text-cyan-400' : 'text-muted-theme hover:bg-hover-theme'}`}
           >
             <List className="h-4 w-4" />
           </button>
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-1.5 rounded-lg ${viewMode === 'grid' ? 'bg-cyan-500/20 text-cyan-400' : 'text-slate-400 hover:bg-slate-800'}`}
+            className={`p-1.5 rounded-lg ${viewMode === 'grid' ? 'bg-cyan-500/20 text-cyan-400' : 'text-muted-theme hover:bg-hover-theme'}`}
           >
             <Grid className="h-4 w-4" />
           </button>
@@ -170,10 +168,19 @@ export function FileManager() {
       </div>
 
       {/* Main File Browser */}
-      {viewMode === 'list' ? (
-        <div className="glass-panel rounded-2xl border border-slate-800 bg-slate-900/60 overflow-hidden">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="border-b border-slate-800 bg-slate-950/80 uppercase text-[10px] text-slate-400">
+      {isLoading ? (
+        <div className="p-12 text-center text-muted-theme flex items-center justify-center gap-2 font-mono text-xs">
+          <RefreshCw className="h-4 w-4 animate-spin text-cyan-400" /> Loading directory contents...
+        </div>
+      ) : safeItems.length === 0 ? (
+        <div className="rounded-2xl border border-theme bg-surface-theme p-12 text-center text-muted-theme text-xs space-y-2">
+          <Inbox className="h-8 w-8 mx-auto opacity-40" />
+          <p>Empty Directory ({currentPath})</p>
+        </div>
+      ) : viewMode === 'list' ? (
+        <div className="rounded-2xl border border-theme bg-surface-theme overflow-hidden">
+          <table className="w-full text-left text-xs text-secondary-theme">
+            <thead className="border-b border-theme bg-card-theme uppercase text-[10px] text-muted-theme">
               <tr>
                 <th className="py-3 px-4">Name</th>
                 <th className="py-3 px-4">Size</th>
@@ -183,9 +190,9 @@ export function FileManager() {
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {items.map((item, idx) => (
-                <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
+            <tbody className="divide-y divide-theme">
+              {safeItems.map((item, idx) => (
+                <tr key={idx} className="hover:bg-hover-theme transition-colors">
                   <td className="py-3 px-4 font-medium flex items-center gap-2.5">
                     {item.isDir ? (
                       <Folder className="h-4 w-4 text-cyan-400 fill-cyan-400/20" />
@@ -196,33 +203,45 @@ export function FileManager() {
                     )}
                     <button
                       onClick={() => item.isDir ? setCurrentPath(item.path) : handleOpenEdit(item)}
-                      className="hover:text-cyan-300 text-slate-200 text-xs font-semibold"
+                      className="hover:text-cyan-400 text-primary-theme text-xs font-semibold"
                     >
                       {item.name}
                     </button>
                   </td>
-                  <td className="py-3 px-4 font-mono text-slate-400">{item.isDir ? '-' : formatBytes(item.size, 1)}</td>
-                  <td className="py-3 px-4 font-mono text-cyan-400/90">{item.permissions}</td>
-                  <td className="py-3 px-4 text-slate-400">{item.owner}:{item.group}</td>
-                  <td className="py-3 px-4 text-slate-400">{item.modTime}</td>
-                  <td className="py-3 px-4 text-right space-x-1">
-                    {!item.isDir && (
-                      <button onClick={() => handleOpenEdit(item)} className="p-1 text-slate-400 hover:text-cyan-400">
-                        <Edit3 className="h-3.5 w-3.5" />
+                  <td className="py-3 px-4 font-mono text-muted-theme">{item.isDir ? '-' : formatBytes(item.size, 1)}</td>
+                  <td className="py-3 px-4 font-mono text-muted-theme">{item.permissions}</td>
+                  <td className="py-3 px-4 font-mono text-muted-theme">{item.owner}/{item.group}</td>
+                  <td className="py-3 px-4 text-muted-theme">{item.modTime}</td>
+                  <td className="py-3 px-4 text-right">
+                    <div className="flex items-center justify-end gap-1.5">
+                      {!item.isDir && (
+                        <button
+                          onClick={() => handleOpenEdit(item)}
+                          className="p-1 rounded bg-card-theme hover:bg-hover-theme text-primary-theme"
+                          title="Edit File"
+                        >
+                          <Edit3 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          setChmodTarget(item);
+                          setNewMode(item.permissions || '0755');
+                          setChmodOpen(true);
+                        }}
+                        className="p-1 rounded bg-card-theme hover:bg-hover-theme text-muted-theme hover:text-primary-theme"
+                        title="Permissions (chmod)"
+                      >
+                        <Shield className="h-3.5 w-3.5" />
                       </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        setChmodTarget(item);
-                        setChmodOpen(true);
-                      }}
-                      className="p-1 text-slate-400 hover:text-indigo-400"
-                    >
-                      <Shield className="h-3.5 w-3.5" />
-                    </button>
-                    <button onClick={() => handleDelete(item)} className="p-1 text-slate-400 hover:text-rose-400">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                      <button
+                        onClick={() => handleDelete(item)}
+                        className="p-1 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500/20"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -230,20 +249,20 @@ export function FileManager() {
           </table>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {items.map((item, idx) => (
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
+          {safeItems.map((item, idx) => (
             <div
               key={idx}
               onClick={() => item.isDir ? setCurrentPath(item.path) : handleOpenEdit(item)}
-              className="glass-panel rounded-2xl border border-slate-800 bg-slate-900/60 p-4 flex flex-col items-center text-center cursor-pointer hover:border-cyan-500/40 hover:bg-slate-800/40 transition-all"
+              className="p-4 rounded-2xl border border-theme bg-surface-theme hover:bg-card-theme cursor-pointer text-center space-y-2 group transition-all"
             >
               {item.isDir ? (
-                <Folder className="h-10 w-10 text-cyan-400 fill-cyan-400/20 mb-2" />
+                <Folder className="h-10 w-10 text-cyan-400 fill-cyan-400/20 mx-auto group-hover:scale-110 transition-transform" />
               ) : (
-                <FileCode className="h-10 w-10 text-indigo-400 mb-2" />
+                <FileCode className="h-10 w-10 text-indigo-400 mx-auto group-hover:scale-110 transition-transform" />
               )}
-              <span className="text-xs font-semibold text-slate-200 truncate w-full">{item.name}</span>
-              <span className="text-[10px] text-slate-400 mt-1 font-mono">{item.isDir ? 'Directory' : formatBytes(item.size, 1)}</span>
+              <p className="text-xs font-bold text-primary-theme truncate group-hover:text-cyan-400">{item.name}</p>
+              <p className="text-[10px] text-muted-theme font-mono">{item.isDir ? 'Directory' : formatBytes(item.size, 0)}</p>
             </div>
           ))}
         </div>
@@ -251,55 +270,70 @@ export function FileManager() {
 
       {/* Editor Modal */}
       {editorOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-4xl glass-panel rounded-3xl border border-slate-800 bg-slate-900 p-6 flex flex-col h-[80vh] shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
-              <h3 className="text-sm font-bold text-white font-mono flex items-center gap-2">
-                <Edit3 className="h-4 w-4 text-cyan-400" /> {editingFilePath}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
+          <div className="w-full max-w-4xl rounded-2xl border border-theme bg-surface-theme p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-theme pb-3">
+              <h3 className="text-sm font-bold text-primary-theme font-mono flex items-center gap-2">
+                <Edit3 className="h-4 w-4 text-cyan-400" /> Editing: {editingFilePath}
               </h3>
-              <button onClick={() => setEditorOpen(false)} className="text-slate-400 hover:text-white">
-                <X className="h-5 w-5" />
+              <button onClick={() => setEditorOpen(false)} className="text-muted-theme hover:text-primary-theme">
+                <X className="h-4 w-4" />
               </button>
             </div>
             <textarea
               value={fileContent}
               onChange={(e) => setFileContent(e.target.value)}
-              className="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-200 focus:outline-none focus:border-cyan-500 resize-none"
+              className="w-full h-96 bg-card-theme border border-theme rounded-xl p-4 font-mono text-xs text-primary-theme focus:outline-none"
             />
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800 mt-4">
-              <button onClick={() => setEditorOpen(false)} className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setEditorOpen(false)}
+                className="px-4 py-2 rounded-xl text-muted-theme hover:bg-hover-theme text-xs"
+              >
                 Cancel
               </button>
-              <button onClick={handleSaveFile} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-500 text-slate-950 font-bold hover:bg-cyan-400">
-                <Save className="h-4 w-4" /> Save File
+              <button
+                onClick={handleSaveFile}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold hover:bg-cyan-600 text-xs"
+              >
+                <Save className="h-3.5 w-3.5" /> Save File
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Chmod Permissions Modal */}
+      {/* Chmod Modal */}
       {chmodOpen && chmodTarget && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md glass-panel rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Shield className="h-4 w-4 text-indigo-400" /> Change Permissions: {chmodTarget.name}
-            </h3>
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">Octal Mode (e.g. 0755, 0644)</label>
-              <input
-                type="text"
-                value={newMode}
-                onChange={(e) => setNewMode(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 font-mono"
-              />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
+          <div className="w-full max-w-md rounded-2xl border border-theme bg-surface-theme p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-theme pb-3">
+              <h3 className="text-sm font-bold text-primary-theme flex items-center gap-2">
+                <Shield className="h-4 w-4 text-cyan-400" /> Change Permissions (chmod)
+              </h3>
+              <button onClick={() => setChmodOpen(false)} className="text-muted-theme hover:text-primary-theme">
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <button onClick={() => setChmodOpen(false)} className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">
+            <div className="space-y-3 text-xs">
+              <p className="text-muted-theme">Target: <strong className="text-primary-theme font-mono">{chmodTarget.name}</strong></p>
+              <div>
+                <label className="block text-muted-theme font-semibold mb-1">Octal Permission Mode</label>
+                <input
+                  type="text"
+                  value={newMode}
+                  onChange={(e) => setNewMode(e.target.value)}
+                  placeholder="0755"
+                  className="w-full bg-card-theme border border-theme rounded-xl px-3 py-2 font-mono text-cyan-400"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setChmodOpen(false)} className="px-4 py-2 rounded-xl text-muted-theme hover:bg-hover-theme text-xs">
                 Cancel
               </button>
-              <button onClick={handleSaveChmod} className="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-500">
-                Update Mode
+              <button onClick={handleSaveChmod} className="px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold hover:bg-cyan-600 text-xs">
+                Apply Permissions
               </button>
             </div>
           </div>

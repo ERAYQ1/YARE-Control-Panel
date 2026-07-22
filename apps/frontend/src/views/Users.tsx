@@ -17,64 +17,74 @@ export function Users() {
   const fetchData = () => {
     setLoading(true);
     Promise.all([
-      api.get('/users/panel').then(res => setPanelUsers(res.data)).catch(() => setPanelUsers([])),
-      api.get('/users/linux').then(res => setLinuxUsers(res.data)).catch(() => setLinuxUsers([])),
-      api.get('/users/ssh-keys').then(res => setSSHKeys(res.data)).catch(() => setSSHKeys([]))
+      api.get('/users/panel')
+        .then(res => setPanelUsers(Array.isArray(res.data) ? res.data : res.data?.users || []))
+        .catch(() => setPanelUsers([])),
+      api.get('/users/linux')
+        .then(res => setLinuxUsers(Array.isArray(res.data) ? res.data : res.data?.users || []))
+        .catch(() => setLinuxUsers([])),
+      api.get('/users/ssh-keys')
+        .then(res => setSSHKeys(Array.isArray(res.data) ? res.data : res.data?.keys || []))
+        .catch(() => setSSHKeys([]))
     ]).finally(() => setLoading(false));
   };
+
+  const safePanelUsers = Array.isArray(panelUsers) ? panelUsers : [];
+  const safeLinuxUsers = Array.isArray(linuxUsers) ? linuxUsers : [];
+  const safeSSHKeys = Array.isArray(sshKeys) ? sshKeys : [];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
+          <h2 className="text-xl font-extrabold text-primary-theme flex items-center gap-2">
             <UsersIcon className="h-6 w-6 text-cyan-400" /> System Accounts & SSH Access
           </h2>
-          <p className="text-xs text-slate-400 mt-1">Manage panel accounts, Linux system users, groups, and SSH authorized keys.</p>
+          <p className="text-xs text-muted-theme mt-1">Manage panel accounts, Linux system users, groups, and SSH authorized keys.</p>
         </div>
 
         {/* Tab selector */}
-        <div className="flex items-center gap-1.5 glass-panel p-1 rounded-xl border border-slate-800 bg-slate-950">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl border border-theme bg-card-theme">
           <button
             onClick={() => setActiveTab('panel')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
-              activeTab === 'panel' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-400 hover:text-white'
+              activeTab === 'panel' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-muted-theme hover:text-primary-theme'
             }`}
           >
-            <UserCheck className="h-3.5 w-3.5" /> Panel Accounts ({panelUsers.length})
+            <UserCheck className="h-3.5 w-3.5" /> Panel Accounts ({safePanelUsers.length})
           </button>
           <button
             onClick={() => setActiveTab('linux')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
-              activeTab === 'linux' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-400 hover:text-white'
+              activeTab === 'linux' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-muted-theme hover:text-primary-theme'
             }`}
           >
-            <Shield className="h-3.5 w-3.5" /> Linux System Users ({linuxUsers.length})
+            <Shield className="h-3.5 w-3.5" /> Linux System Users ({safeLinuxUsers.length})
           </button>
           <button
             onClick={() => setActiveTab('ssh')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
-              activeTab === 'ssh' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-400 hover:text-white'
+              activeTab === 'ssh' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-muted-theme hover:text-primary-theme'
             }`}
           >
-            <Key className="h-3.5 w-3.5" /> Authorized SSH Keys ({sshKeys.length})
+            <Key className="h-3.5 w-3.5" /> Authorized SSH Keys ({safeSSHKeys.length})
           </button>
         </div>
       </div>
 
       {loading ? (
-        <div className="p-12 text-center text-slate-400 flex items-center justify-center gap-2 font-mono text-xs">
+        <div className="p-12 text-center text-muted-theme flex items-center justify-center gap-2 font-mono text-xs">
           <RefreshCw className="h-4 w-4 animate-spin text-cyan-400" /> Querying system accounts telemetry...
         </div>
       ) : (
         <>
           {activeTab === 'panel' && (
-            <div className="glass-panel rounded-2xl border border-slate-800 bg-slate-900/60 overflow-hidden">
-              {panelUsers.length === 0 ? (
-                <div className="p-8 text-center text-slate-500 text-xs font-mono">No panel user accounts found in database.</div>
+            <div className="rounded-2xl border border-theme bg-surface-theme overflow-hidden">
+              {safePanelUsers.length === 0 ? (
+                <div className="p-8 text-center text-muted-theme text-xs font-mono">No panel user accounts found in database.</div>
               ) : (
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="border-b border-slate-800 bg-slate-950/80 uppercase text-[10px] text-slate-400">
+                <table className="w-full text-left text-xs text-secondary-theme">
+                  <thead className="border-b border-theme bg-card-theme uppercase text-[10px] text-muted-theme">
                     <tr>
                       <th className="py-3 px-4">Username</th>
                       <th className="py-3 px-4">Email</th>
@@ -83,18 +93,18 @@ export function Users() {
                       <th className="py-3 px-4">Created At</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60">
-                    {panelUsers.map((u, idx) => (
-                      <tr key={idx} className="hover:bg-slate-800/40">
-                        <td className="py-3 px-4 font-bold text-white">{u.username}</td>
-                        <td className="py-3 px-4 text-slate-400">{u.email}</td>
+                  <tbody className="divide-y divide-theme">
+                    {safePanelUsers.map((u, idx) => (
+                      <tr key={idx} className="hover:bg-hover-theme">
+                        <td className="py-3 px-4 font-bold text-primary-theme">{u.username}</td>
+                        <td className="py-3 px-4 text-muted-theme">{u.email}</td>
                         <td className="py-3 px-4">
                           <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-bold uppercase border border-cyan-500/20">
                             {u.role}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-slate-400">{u.twoFactorEnabled ? 'Enabled' : 'Disabled'}</td>
-                        <td className="py-3 px-4 text-slate-400">{u.createdAt}</td>
+                        <td className="py-3 px-4 text-muted-theme">{u.twoFactorEnabled ? 'Enabled' : 'Disabled'}</td>
+                        <td className="py-3 px-4 text-muted-theme">{u.createdAt}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -104,28 +114,34 @@ export function Users() {
           )}
 
           {activeTab === 'linux' && (
-            <div className="glass-panel rounded-2xl border border-slate-800 bg-slate-900/60 overflow-hidden">
-              {linuxUsers.length === 0 ? (
-                <div className="p-8 text-center text-slate-500 text-xs font-mono">Unable to retrieve Linux system users (/etc/passwd).</div>
+            <div className="rounded-2xl border border-theme bg-surface-theme overflow-hidden">
+              {safeLinuxUsers.length === 0 ? (
+                <div className="p-8 text-center text-muted-theme text-xs font-mono">No Linux system users enumerated.</div>
               ) : (
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="border-b border-slate-800 bg-slate-950/80 uppercase text-[10px] text-slate-400">
+                <table className="w-full text-left text-xs text-secondary-theme">
+                  <thead className="border-b border-theme bg-card-theme uppercase text-[10px] text-muted-theme">
                     <tr>
                       <th className="py-3 px-4">Username</th>
                       <th className="py-3 px-4">UID / GID</th>
                       <th className="py-3 px-4">Home Directory</th>
                       <th className="py-3 px-4">Shell</th>
-                      <th className="py-3 px-4">Groups</th>
+                      <th className="py-3 px-4">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60">
-                    {linuxUsers.map((u, idx) => (
-                      <tr key={idx} className="hover:bg-slate-800/40">
-                        <td className="py-3 px-4 font-bold text-white font-mono">{u.username}</td>
-                        <td className="py-3 px-4 font-mono text-slate-400">{u.uid} / {u.gid}</td>
-                        <td className="py-3 px-4 font-mono text-slate-300">{u.homeDir}</td>
-                        <td className="py-3 px-4 font-mono text-cyan-400">{u.shell}</td>
-                        <td className="py-3 px-4 text-slate-400">{(u.groups || []).join(', ')}</td>
+                  <tbody className="divide-y divide-theme font-mono">
+                    {safeLinuxUsers.map((u, idx) => (
+                      <tr key={idx} className="hover:bg-hover-theme">
+                        <td className="py-3 px-4 font-bold text-primary-theme">{u.username}</td>
+                        <td className="py-3 px-4 text-muted-theme">{u.uid} / {u.gid}</td>
+                        <td className="py-3 px-4 text-secondary-theme">{u.homeDir}</td>
+                        <td className="py-3 px-4 text-cyan-400">{u.shell}</td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${
+                            u.isLocked ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                          }`}>
+                            {u.isLocked ? 'Locked' : 'Active'}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -135,25 +151,28 @@ export function Users() {
           )}
 
           {activeTab === 'ssh' && (
-            <div className="space-y-4">
-              {sshKeys.length === 0 ? (
-                <div className="glass-panel rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-500 text-xs font-mono">
-                  No registered SSH authorized keys.
-                </div>
+            <div className="rounded-2xl border border-theme bg-surface-theme overflow-hidden">
+              {safeSSHKeys.length === 0 ? (
+                <div className="p-8 text-center text-muted-theme text-xs font-mono">No authorized SSH keys configured.</div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {sshKeys.map((key, idx) => (
-                    <div key={idx} className="glass-panel rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-white text-xs flex items-center gap-2">
-                          <Key className="h-4 w-4 text-cyan-400" /> {key.name}
-                        </span>
-                        <span className="text-[10px] text-slate-400">{key.addedAt}</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 font-mono truncate">{key.fingerprint}</p>
-                    </div>
-                  ))}
-                </div>
+                <table className="w-full text-left text-xs text-secondary-theme">
+                  <thead className="border-b border-theme bg-card-theme uppercase text-[10px] text-muted-theme">
+                    <tr>
+                      <th className="py-3 px-4">Key Name</th>
+                      <th className="py-3 px-4">Fingerprint</th>
+                      <th className="py-3 px-4">Added Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-theme font-mono">
+                    {safeSSHKeys.map((k, idx) => (
+                      <tr key={idx} className="hover:bg-hover-theme">
+                        <td className="py-3 px-4 font-bold text-primary-theme">{k.name}</td>
+                        <td className="py-3 px-4 text-cyan-400 text-[11px] truncate max-w-xs">{k.fingerprint}</td>
+                        <td className="py-3 px-4 text-muted-theme">{k.addedAt}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </div>
           )}

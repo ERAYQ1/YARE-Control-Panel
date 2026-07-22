@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Plus, Trash2, Play, ToggleLeft, ToggleRight, RefreshCw } from 'lucide-react';
+import { Clock, Plus, Trash2, Play, ToggleLeft, ToggleRight, RefreshCw, Inbox, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 interface CronJob {
@@ -31,10 +31,13 @@ export const CronManagerView: React.FC = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        setJobs(data.jobs || []);
+        setJobs(Array.isArray(data?.jobs) ? data.jobs : Array.isArray(data) ? data : []);
+      } else {
+        setJobs([]);
       }
     } catch (e) {
       console.error(e);
+      setJobs([]);
     } finally {
       setLoading(false);
     }
@@ -108,88 +111,99 @@ export const CronManagerView: React.FC = () => {
     }
   };
 
+  const safeJobs = Array.isArray(jobs) ? jobs : [];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
-            <Clock className="w-6 h-6 text-emerald-400" />
+          <h1 className="text-2xl font-bold text-primary-theme flex items-center gap-2">
+            <Clock className="w-6 h-6 text-cyan-400" />
             {t('cron')}
           </h1>
-          <p className="text-sm text-zinc-400 mt-1">
-            Schedule automated system commands and scripts effortlessly.
+          <p className="text-sm text-muted-theme mt-1">
+            Automated Linux background cron job scheduler & manual trigger engine.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={fetchJobs}
-            className="p-2 text-zinc-400 hover:text-zinc-200 bg-zinc-900 border border-zinc-800 rounded-lg"
+            className="p-2 text-muted-theme hover:text-primary-theme bg-card-theme border border-theme rounded-lg"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg"
+            className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition"
           >
             <Plus className="w-4 h-4" />
-            New Scheduled Job
+            Add Scheduled Task
           </button>
         </div>
       </div>
 
-      <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl overflow-hidden">
+      <div className="bg-surface-theme border border-theme rounded-2xl overflow-hidden shadow-sm">
         {loading ? (
-          <div className="p-8 text-center text-zinc-500">Loading scheduled jobs...</div>
-        ) : jobs.length === 0 ? (
-          <div className="p-12 text-center text-zinc-500">
-            <Clock className="w-12 h-12 mx-auto mb-3 text-zinc-700" />
-            <p>No cron jobs configured.</p>
+          <div className="p-12 text-center text-muted-theme font-mono text-xs flex items-center justify-center gap-2">
+            <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" /> Fetching scheduled jobs...
+          </div>
+        ) : safeJobs.length === 0 ? (
+          <div className="p-12 text-center text-muted-theme space-y-2">
+            <Inbox className="w-10 h-10 mx-auto opacity-40" />
+            <p className="text-xs">No scheduled cron tasks configured.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-zinc-300">
-              <thead className="bg-zinc-950/80 text-zinc-400 uppercase text-xs border-b border-zinc-800">
+            <table className="w-full text-left text-xs text-secondary-theme">
+              <thead className="bg-card-theme text-muted-theme uppercase text-[10px] border-b border-theme font-bold">
                 <tr>
-                  <th className="px-6 py-3">Job Name</th>
-                  <th className="px-6 py-3">Schedule</th>
-                  <th className="px-6 py-3">Command</th>
-                  <th className="px-6 py-3">Last Run Status</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3">Task Name</th>
+                  <th className="px-4 py-3">Cron Expression</th>
+                  <th className="px-4 py-3">Command</th>
+                  <th className="px-4 py-3">State</th>
+                  <th className="px-4 py-3">Last Run</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/60">
-                {jobs.map((j) => (
-                  <tr key={j.id} className="hover:bg-zinc-800/30 transition">
-                    <td className="px-6 py-4 font-medium text-zinc-100">{j.name}</td>
-                    <td className="px-6 py-4 font-mono text-emerald-400 text-xs">{j.schedule}</td>
-                    <td className="px-6 py-4 font-mono text-zinc-400 text-xs max-w-xs truncate">{j.command}</td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-mono ${
-                        j.last_status.includes('success') ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-800 text-zinc-400'
-                      }`}>
-                        {j.last_status || 'Never run'}
-                      </span>
+              <tbody className="divide-y divide-theme font-mono">
+                {safeJobs.map((j) => (
+                  <tr key={j.id} className="hover:bg-hover-theme transition">
+                    <td className="px-4 py-3 font-bold text-primary-theme flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-cyan-400" />
+                      {j.name}
                     </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleRunNow(j.id)}
-                        className="p-1.5 text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 rounded"
-                        title="Run Now"
-                      >
-                        <Play className="w-4 h-4" />
+                    <td className="px-4 py-3 text-cyan-400 font-bold">{j.schedule}</td>
+                    <td className="px-4 py-3 text-muted-theme truncate max-w-xs">{j.command}</td>
+                    <td className="px-4 py-3">
+                      <button onClick={() => handleToggle(j.id)} className="flex items-center gap-1">
+                        {j.enabled ? (
+                          <ToggleRight className="w-5 h-5 text-emerald-400" />
+                        ) : (
+                          <ToggleLeft className="w-5 h-5 text-muted-theme" />
+                        )}
+                        <span className={`text-[10px] font-bold ${j.enabled ? 'text-emerald-400' : 'text-muted-theme'}`}>
+                          {j.enabled ? 'ENABLED' : 'DISABLED'}
+                        </span>
                       </button>
-                      <button
-                        onClick={() => handleToggle(j.id)}
-                        className="p-1.5 text-zinc-400 hover:text-zinc-200 bg-zinc-800 rounded"
-                      >
-                        {j.enabled ? <ToggleRight className="w-4 h-4 text-emerald-400" /> : <ToggleLeft className="w-4 h-4 text-zinc-500" />}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(j.id)}
-                        className="p-1.5 text-red-400 hover:text-red-300 bg-red-500/10 rounded"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    </td>
+                    <td className="px-4 py-3 text-muted-theme">{j.last_run || 'Never'}</td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleRunNow(j.id)}
+                          className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20"
+                          title="Run Task Now"
+                        >
+                          <Play className="w-3.5 h-3.5 fill-emerald-400" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(j.id)}
+                          className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20"
+                          title="Delete Task"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -199,57 +213,69 @@ export const CronManagerView: React.FC = () => {
         )}
       </div>
 
+      {/* Modal: Add Cron Task */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-full max-w-md space-y-4">
-            <h2 className="text-lg font-bold text-zinc-100">Add New Scheduled Job</h2>
-            <form onSubmit={handleCreateJob} className="space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
+          <div className="w-full max-w-md bg-surface-theme border border-theme rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-theme pb-3">
+              <h3 className="text-sm font-bold text-primary-theme flex items-center gap-2">
+                <Clock className="w-4 h-4 text-cyan-400" /> Add Scheduled Cron Task
+              </h3>
+              <button onClick={() => setShowAddModal(false)} className="text-muted-theme hover:text-primary-theme">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateJob} className="space-y-4 text-xs">
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1">Job Name</label>
+                <label className="block text-muted-theme font-semibold mb-1">Task Label</label>
                 <input
                   type="text"
-                  placeholder="Daily Database Backup"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Clean Temp Logs"
                   required
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100"
+                  className="w-full bg-card-theme border border-theme rounded-xl px-3 py-2 text-primary-theme"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1">Cron Expression (e.g. 0 0 * * *)</label>
+                <label className="block text-muted-theme font-semibold mb-1">Cron Expression (min hour day month weekday)</label>
                 <input
                   type="text"
-                  placeholder="0 0 * * *"
                   value={schedule}
                   onChange={(e) => setSchedule(e.target.value)}
+                  placeholder="0 0 * * *"
                   required
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400"
+                  className="w-full bg-card-theme border border-theme rounded-xl px-3 py-2 font-mono text-cyan-400"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1">Command / Script</label>
+                <label className="block text-muted-theme font-semibold mb-1">Executable Command</label>
                 <input
                   type="text"
-                  placeholder="docker exec my_db pg_dumpall > backup.sql"
                   value={command}
                   onChange={(e) => setCommand(e.target.value)}
+                  placeholder="/usr/bin/find /tmp -type f -mtime +7 -delete"
                   required
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 font-mono"
+                  className="w-full bg-card-theme border border-theme rounded-xl px-3 py-2 font-mono text-primary-theme"
                 />
               </div>
-              <div className="flex justify-end gap-3 pt-2">
+
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 text-sm text-zinc-400"
+                  className="px-4 py-2 rounded-xl text-muted-theme hover:bg-hover-theme"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg"
+                  className="px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold hover:bg-cyan-600"
                 >
-                  Save Cron Job
+                  Save Task
                 </button>
               </div>
             </form>

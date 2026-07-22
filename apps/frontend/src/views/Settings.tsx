@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Settings as SettingsIcon, Save, Shield, Bell, Globe, Users as UsersIcon, Clock, ScrollText, Smartphone, KeyRound, CheckCircle, AlertCircle } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Shield, Bell, Globe, Users as UsersIcon, Clock, ScrollText, Smartphone, KeyRound, CheckCircle, AlertCircle, Lock } from 'lucide-react';
 import { Users } from './Users';
 import { CronManagerView } from './CronManager';
 import { AlertManagerView } from './AlertManager';
@@ -13,6 +13,14 @@ export function Settings() {
   const [sessionTimeout, setSessionTimeout] = useState('1440');
   const [rateLimiting, setRateLimiting] = useState(true);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Change Password Form State
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwdError, setPwdError] = useState('');
+  const [pwdSuccess, setPwdSuccess] = useState('');
+  const [isChangingPwd, setIsChangingPwd] = useState(false);
 
   // 2FA TOTP state
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -64,6 +72,44 @@ export function Settings() {
         applyTheme(theme);
         setTimeout(() => setSavedSuccess(false), 3000);
       });
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdError('');
+    setPwdSuccess('');
+
+    if (newPassword.length < 8) {
+      setPwdError('New password must be at least 8 characters long.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPwdError('New passwords do not match.');
+      return;
+    }
+
+    setIsChangingPwd(true);
+    try {
+      await api.post('/auth/change-password', {
+        currentPassword,
+        newPassword,
+      });
+      setPwdSuccess('Password changed successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      const storedUser = localStorage.getItem('yare_user');
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        parsed.mustChangePassword = false;
+        localStorage.setItem('yare_user', JSON.stringify(parsed));
+      }
+    } catch (err: any) {
+      setPwdError(err.response?.data?.error || 'Failed to update password.');
+    } finally {
+      setIsChangingPwd(false);
+    }
   };
 
   const handleInitiate2FA = async () => {
@@ -125,7 +171,7 @@ export function Settings() {
           <h2 className="text-xl font-extrabold text-primary-theme flex items-center gap-2">
             <SettingsIcon className="h-6 w-6 text-cyan-400" /> Platform & Server Settings
           </h2>
-          <p className="text-xs text-muted-theme mt-1">Unified panel configuration, security accounts, cron jobs, alerts, and audit logs.</p>
+          <p className="text-xs text-muted-theme mt-1">Unified panel configuration, security accounts, password management, cron jobs, alerts, and audit logs.</p>
         </div>
 
         <div className="flex items-center gap-1 p-1 rounded-xl border border-theme bg-card-theme">
@@ -156,7 +202,7 @@ export function Settings() {
             </div>
           )}
 
-          {/* General Settings */}
+          {/* General Preferences */}
           <div className="rounded-2xl border border-theme bg-surface-theme p-6 space-y-4">
             <h3 className="text-sm font-bold text-primary-theme flex items-center gap-2 border-b border-theme pb-3">
               <Globe className="h-4 w-4 text-cyan-400" /> System Preferences
@@ -188,6 +234,74 @@ export function Settings() {
                 </select>
               </div>
             </div>
+          </div>
+
+          {/* Change Account Password Section */}
+          <div className="rounded-2xl border border-theme bg-surface-theme p-6 space-y-4">
+            <h3 className="text-sm font-bold text-primary-theme flex items-center gap-2 border-b border-theme pb-3">
+              <KeyRound className="h-4 w-4 text-cyan-400" /> Account Password Management
+            </h3>
+
+            {pwdError && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" /> {pwdError}
+              </div>
+            )}
+
+            {pwdSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" /> {pwdSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleChangePassword} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-muted-theme font-semibold mb-1">Current Password</label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                    placeholder="Current password"
+                    className="w-full bg-card-theme border border-theme rounded-xl px-3 py-2 text-primary-theme"
+                  />
+                </div>
+                <div>
+                  <label className="block text-muted-theme font-semibold mb-1">New Password</label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    placeholder="Min 8 characters"
+                    className="w-full bg-card-theme border border-theme rounded-xl px-3 py-2 text-primary-theme"
+                  />
+                </div>
+                <div>
+                  <label className="block text-muted-theme font-semibold mb-1">Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    placeholder="Repeat new password"
+                    className="w-full bg-card-theme border border-theme rounded-xl px-3 py-2 text-primary-theme"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-1">
+                <button
+                  type="submit"
+                  disabled={isChangingPwd}
+                  className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold transition-all disabled:opacity-50"
+                >
+                  {isChangingPwd ? 'Updating Password...' : 'Update Password'}
+                </button>
+              </div>
+            </form>
           </div>
 
           {/* Two-Factor Authentication (2FA TOTP) */}
@@ -231,17 +345,17 @@ export function Settings() {
             )}
 
             {isSettingUp2FA && (
-              <div className="space-y-4 border border-cyan-500/20 bg-slate-950 p-4 rounded-xl text-xs">
+              <div className="space-y-4 border border-cyan-500/20 bg-card-theme p-4 rounded-xl text-xs">
                 <p className="font-bold text-cyan-400">Step 1: Scan URI or enter Secret Key in Authenticator App</p>
-                <div className="p-3 bg-slate-900 rounded-lg font-mono text-cyan-300 select-all break-all border border-slate-800">
+                <div className="p-3 bg-surface-theme rounded-lg font-mono text-cyan-400 select-all break-all border border-theme">
                   Secret Key: {totpSecret}
                 </div>
-                <div className="p-2 bg-slate-900 rounded-lg font-mono text-slate-400 text-[11px] select-all break-all border border-slate-800">
+                <div className="p-2 bg-surface-theme rounded-lg font-mono text-muted-theme text-[11px] select-all break-all border border-theme">
                   OTP URI: {otpURI}
                 </div>
 
                 <form onSubmit={handleVerify2FA} className="space-y-3 pt-2">
-                  <p className="font-bold text-white">Step 2: Enter 6-digit Verification Code</p>
+                  <p className="font-bold text-primary-theme">Step 2: Enter 6-digit Verification Code</p>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -249,7 +363,7 @@ export function Settings() {
                       value={verifyCode}
                       onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ''))}
                       placeholder="123456"
-                      className="w-36 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-center text-cyan-400 text-sm focus:outline-none"
+                      className="w-36 bg-surface-theme border border-theme rounded-xl px-3 py-2 font-mono text-center text-cyan-400 text-sm focus:outline-none"
                     />
                     <button
                       type="submit"
@@ -261,7 +375,7 @@ export function Settings() {
                     <button
                       type="button"
                       onClick={() => setIsSettingUp2FA(false)}
-                      className="px-3 py-2 text-slate-400 hover:text-white"
+                      className="px-3 py-2 text-muted-theme hover:text-primary-theme"
                     >
                       Cancel
                     </button>
@@ -286,7 +400,7 @@ export function Settings() {
             )}
 
             {isDisabling2FA && (
-              <form onSubmit={handleDisable2FA} className="space-y-3 border border-rose-500/20 bg-slate-950 p-4 rounded-xl text-xs">
+              <form onSubmit={handleDisable2FA} className="space-y-3 border border-rose-500/20 bg-card-theme p-4 rounded-xl text-xs">
                 <p className="font-bold text-rose-400">Confirm Disabling 2FA</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <input
@@ -295,7 +409,7 @@ export function Settings() {
                     onChange={(e) => setDisablePassword(e.target.value)}
                     placeholder="Current Password"
                     required
-                    className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white"
+                    className="bg-surface-theme border border-theme rounded-xl px-3 py-2 text-primary-theme"
                   />
                   <input
                     type="text"
@@ -304,7 +418,7 @@ export function Settings() {
                     onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, ''))}
                     placeholder="6-Digit 2FA Code"
                     required
-                    className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 font-mono text-cyan-400 text-center"
+                    className="bg-surface-theme border border-theme rounded-xl px-3 py-2 font-mono text-cyan-400 text-center"
                   />
                 </div>
                 <div className="flex items-center gap-2 pt-1">
@@ -317,7 +431,7 @@ export function Settings() {
                   <button
                     type="button"
                     onClick={() => setIsDisabling2FA(false)}
-                    className="px-3 py-2 text-slate-400 hover:text-white"
+                    className="px-3 py-2 text-muted-theme hover:text-primary-theme"
                   >
                     Cancel
                   </button>
